@@ -20,31 +20,6 @@ use Symfony\Components\Console\Input\InputInterface,
  * @subpackage Command
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-class StopCommand extends Command
+abstract class DaemonCommand extends Command
 {
-  /**
-   * @see Command
-   */
-  protected function configure()
-  {
-    $this->setName('server:stop');
-  }
-
-  /**
-   * @see Command
-   */
-  protected function execute(InputInterface $input, OutputInterface $output)
-  {
-    $pidFile = $this->container->getParameter('server.pid_file');
-
-    // pid file exists
-    if (file_exists($pidFile) && is_file($pidFile))
-    {
-      // get pid
-      $pid = file_get_contents($pidFile);
-
-      // send SIGTERM signal
-      posix_kill($pid, SIGTERM);
-    }
-  }
 }

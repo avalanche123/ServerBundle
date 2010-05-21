@@ -24,6 +24,7 @@ use Symfony\Components\DependencyInjection\ContainerInterface,
 class Server
 {
   protected $container;
+  protected $daemon;
 
   protected $address;
   protected $port;
@@ -54,6 +55,8 @@ class Server
 
     $this->container = $container;
 
+    $this->daemon = $this->container->getDaemonService();
+
     $address      = $container->getParameter('server.address');
     $port         = $container->getParameter('server.port');
     $maxRequests  = $container->getParameter('server.max_requests_per_child');
@@ -71,13 +74,38 @@ class Server
     $this->maxRequests = $maxRequests;
     $this->numRequests = 0;
 
-    $this->pid         = getmypid();
-    $this->pidFile     = $pidFile;
+    if ($this->daemon->isDaemon())
+    {
+      $this->pid     = getmypid();
+      $this->pidFile = $pidFile;
+    }
 
     $this->connected   = false;
     $this->socket      = null;
 
     $this->documentRoot = $documentRoot;
+
+    // pcntl ticks
+    declare(ticks = 1);
+
+    // register pcntl signal handler
+    pcntl_signal(SIGTERM, array($this, 'pcntlSignalHandler'));
+  }
+
+  /**
+   * @param integer $signo
+   */
+  public function pcntlSignalHandler($signo)
+  {
+    switch ($signo)
+    {
+      // TERMINATE
+      case SIGTERM:
+        echo "SIGTERM RECIEVED\n\n";
+
+        $this->run = false;
+        break;
+    }
   }
 
   /**
@@ -155,7 +183,7 @@ class Server
     }
 
     // use a pidFile
-    if (null !== $this->pidFile)
+    if (null !== $this->pid && null !== $this->pidFile)
     {
       // pidFile exists
       if (file_exists($this->pidFile))
@@ -174,8 +202,8 @@ class Server
     // state change
     $this->connected = true;
 
-    $run = true; // endless
-    while (true === $run)
+    $this->run = true; // endless
+    while (true === $this->run)
     {
       // accept socket
       $handler = @stream_socket_accept($this->socket);
@@ -183,7 +211,7 @@ class Server
       // socket timeout
       if (!$handler)
       {
-        $run = false;
+        $this->run = false;
         continue;
       }
 
@@ -268,18 +296,17 @@ class Server
       // lifecycle ends here
       if ($this->maxRequests > 0 && $this->numRequests == $this->maxRequests)
       {
-        $run = false;
+        $this->run = false;
       }
     }
-
-    // terminate signal
-    echo "SIGTERM\n\n";
 
     // runtime statistics
     echo sprintf("TIME:\t\t%.0f ms\n", (microtime(true) - $this->container->getKernelService()->getStartTime()) * 1000);
     echo sprintf("MEMORY:\t\t%.0f KB\n", memory_get_peak_usage(true)  / 1024);
     echo sprintf("REQUESTS:\t%d\n", $this->numRequests);
     echo "\n";
+
+    $this->stop();
   }
 
   /*
@@ -296,7 +323,10 @@ class Server
    */
   public function stop()
   {
-    unlink($this->pidFile);
+    if (null !== $this->pid && null !== $this->pidFile)
+    {
+      unlink($this->pidFile);
+    }
 
     if ($this->connected)
     {

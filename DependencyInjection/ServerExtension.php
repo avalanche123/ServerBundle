@@ -23,8 +23,23 @@ use Symfony\Components\DependencyInjection\Loader\LoaderExtension,
 class ServerExtension extends LoaderExtension
 {
   protected $resources = array(
+    'daemon' => 'daemon.xml',
     'server' => 'server.xml'
   );
+
+  /**
+   * @param array $config
+   * @return BuilderConfiguration
+   */
+  public function daemonLoad($config)
+  {
+    $configuration = new BuilderConfiguration();
+
+    $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
+    $configuration->merge($loader->load($this->resources['daemon']));
+
+    return $configuration;
+  }
 
   /**
    * @param array $config

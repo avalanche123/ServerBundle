@@ -6,7 +6,7 @@ use Symfony\Components\Console\Input\InputArgument,
     Symfony\Components\Console\Input\InputOption,
     Symfony\Components\Console\Input\InputInterface,
     Symfony\Components\Console\Output\OutputInterface,
-    Bundle\ServerBundle\Command\Command;
+    Bundle\ServerBundle\Command\DaemonCommand;
 
 /*
  * This file is part of the ServerBundle package.
@@ -22,7 +22,7 @@ use Symfony\Components\Console\Input\InputArgument,
  * @subpackage Command
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-class StartCommand extends Command
+class StartCommand extends DaemonCommand
 {
   /**
    * @see Command
@@ -61,7 +61,6 @@ class StartCommand extends Command
      */
 
     /*
-    $daemonize   = $input->getOption('daemonize');
     $environment = $input->getOption('environment');
     $port        = $input->getOption('port');
     $address     = $input->getOption('address');
@@ -77,14 +76,20 @@ class StartCommand extends Command
     }
     */
 
-    $server = $this->container->getServerService();
+    $daemonize = $input->getOption('daemonize');
+    $isDaemon  = false;#
 
-    $output->writeln(sprintf('Server started at "tcp://%s:%d"', $server->getAddress(), $server->getPort()));
+    if ($daemonize)
+    {
+      $daemon   = $this->container->getDaemonService();
+      $isDaemon = $daemon->process();
+    }
 
-    $server->start();
+    if (!$daemonize || ($daemonize && $isDaemon))
+    {
+      $server = $this->container->getServerService();
 
-    $server->stop();
-
-    $output->writeln('Server stopped');
+      return $server->start();
+    }
   }
 }

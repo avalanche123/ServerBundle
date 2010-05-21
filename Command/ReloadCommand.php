@@ -20,7 +20,7 @@ use Symfony\Components\Console\Input\InputInterface,
  * @subpackage Command
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-class ReloadCommand extends Command
+class ReloadCommand extends DaemonCommand
 {
   /**
    * @see Command
