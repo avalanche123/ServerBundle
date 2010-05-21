@@ -142,6 +142,18 @@ class Server
    */
   public function start()
   {
+    // create context, create server socket
+    $this->context = stream_context_create();
+    $this->socket  = @stream_socket_server('tcp://'.$this->getAddress().':'.$this->getPort(), $errno, $errstr, STREAM_SERVER_BIND | STREAM_SERVER_LISTEN, $this->context);
+
+    if (!$this->socket)
+    {
+      $error = 'Cannot listen to "tcp://%s:%d": %s';
+      $error = sprintf($error, $this->getAddress(), $this->getPort(), $errstr);
+
+      throw new \Exception($error, $errno);
+    }
+
     // use a pidFile
     if (null !== $this->pidFile)
     {
@@ -153,18 +165,6 @@ class Server
       }
 
       file_put_contents($this->pidFile, $this->pid);
-    }
-
-    // create context, create server socket
-    $this->context = stream_context_create();
-    $this->socket  = stream_socket_server('tcp://'.$this->getAddress().':'.$this->getPort(), $errno, $errstr, STREAM_SERVER_BIND | STREAM_SERVER_LISTEN, $this->context);
-
-    if (!$this->socket)
-    {
-      $error = 'Cannot listen to "tcp://%s:%d": %s';
-      $error = sprintf($error, $this->getAddress(), $this->getPort(), $errstr);
-
-      throw new \Exception($error, $errno);
     }
 
     // non blocking, w/o timeout
