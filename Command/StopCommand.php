@@ -43,6 +43,8 @@ class StopCommand extends DaemonCommand
       // get pid
       $pid = file_get_contents($pidFile);
 
+      $output->writeln('server stopped');
+
       // send SIGTERM signal
       posix_kill($pid, SIGTERM);
     }
