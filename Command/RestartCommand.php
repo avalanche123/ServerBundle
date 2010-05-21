@@ -4,7 +4,7 @@ namespace Bundle\ServerBundle\Command;
 
 use Symfony\Components\Console\Input\InputInterface,
     Symfony\Components\Console\Output\OutputInterface,
-    Bundle\ServerBundle\Command\Command;
+    Bundle\ServerBundle\Command\DaemonCommand;
 
 /*
  * This file is part of the ServerBundle package.
