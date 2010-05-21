@@ -64,20 +64,15 @@ The default configuration of ServerBundle starts a server listening on `*:1962`
 - I have chosen port `1962` because it is the alphabetic representation
 (latin alphabet) of the Symfony shortcut `sf2` (s:19 f:6 2) :)
 
-Now, just point your browser to `localhost:1962` or try to load another
-controller, e.g. `http://localhost:1962/hello/Pierre`. If you want to change the
-port, change it in your applications configuration:
+Now, just point your browser to `localhost:1962`, or try to load another
+controller, e.g. `http://localhost:1962/hello/Pierre`.
+
+If you want to change the port, change it in your applications configuration:
 
     [yaml]
     # hello/config/config.yml
     server.server:
       port: 80
-
-
-Now point your browser to `localhost`:
-
-  http://localhost/
-  http://localhost/hello/Pierre
 
 
 If you want to use the Apache like `/server-info` and `/server-status` pages,
