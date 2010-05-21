@@ -1,0 +1,7 @@
+server_info:
+  pattern: /server-info
+  defaults: { _controller: ServerBundle:Default:info }
+
+server_status:
+  pattern: /server-status
+  defaults: { _controller: ServerBundle:Default:status }
