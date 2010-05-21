@@ -39,6 +39,9 @@ class Server
   protected $context;
   protected $socket;
 
+  protected $run;
+  protected $stop;
+
   protected $documentRoot;
 
   /**
@@ -54,8 +57,8 @@ class Server
     }
 
     $this->container = $container;
-
-    $this->daemon = $this->container->getDaemonService();
+    $this->daemon    = $this->container->getDaemonService();
+    $this->context   = stream_context_create();
 
     $address      = $container->getParameter('server.address');
     $port         = $container->getParameter('server.port');
@@ -73,6 +76,9 @@ class Server
 
     $this->maxRequests = $maxRequests;
     $this->numRequests = 0;
+
+    $this->run = true;
+    $this->stop = false;
 
     if ($this->daemon->isDaemon())
     {
@@ -103,6 +109,7 @@ class Server
       case SIGTERM:
         echo "SIGTERM RECIEVED\n\n";
 
+        $this->stop = true;
         $this->run = false;
         break;
     }
@@ -170,16 +177,25 @@ class Server
    */
   public function start()
   {
-    // create context, create server socket
-    $this->context = stream_context_create();
-    $this->socket  = @stream_socket_server('tcp://'.$this->getAddress().':'.$this->getPort(), $errno, $errstr, STREAM_SERVER_BIND | STREAM_SERVER_LISTEN, $this->context);
-
+    // create server socket
     if (!$this->socket)
     {
-      $error = 'Cannot listen to "tcp://%s:%d": %s';
-      $error = sprintf($error, $this->getAddress(), $this->getPort(), $errstr);
+      $this->socket = @stream_socket_server('tcp://'.$this->getAddress().':'.$this->getPort(), $errno, $errstr, STREAM_SERVER_BIND | STREAM_SERVER_LISTEN, $this->context);
 
-      throw new \Exception($error, $errno);
+      if (!$this->socket)
+      {
+        $error = 'Cannot listen to "tcp://%s:%d": %s';
+        $error = sprintf($error, $this->getAddress(), $this->getPort(), $errstr);
+
+        throw new \Exception($error, $errno);
+      }
+
+      // non blocking, w/o timeout
+      stream_set_blocking($this->socket, false);
+      stream_set_timeout($this->socket, 0);
+
+      // state change
+      $this->connected = true;
     }
 
     // use a pidFile
@@ -192,17 +208,11 @@ class Server
         throw new \Exception(sprintf('Server already started (pid: "%d")', file_get_contents($this->pidFile)));
       }
 
-      file_put_contents($this->pidFile, $this->pid);
+      $fp = fopen($this->pidFile, 'w+');
+      fwrite($fp, $this->pid);
+      fclose($fp); unset($fp);
     }
 
-    // non blocking, w/o timeout
-    stream_set_blocking($this->socket, false);
-    stream_set_timeout($this->socket, 0);
-
-    // state change
-    $this->connected = true;
-
-    $this->run = true; // endless
     while (true === $this->run)
     {
       // accept socket
@@ -288,16 +298,19 @@ class Server
       echo sprintf("\t%.0f KB", (memory_get_usage(true) - $memoryUsage) / 1024);
       echo "\n\n";
 
-      // $this->close($handler);
-
       // increase request counter
       $this->numRequests++;
 
       // lifecycle ends here
-      if ($this->maxRequests > 0 && $this->numRequests == $this->maxRequests)
+      if ($this->maxRequests > 0 && $this->numRequests >= $this->maxRequests)
       {
         $this->run = false;
       }
+    }
+
+    if ($handler)
+    {
+      fclose($handler);
     }
 
     // runtime statistics
@@ -306,7 +319,27 @@ class Server
     echo sprintf("REQUESTS:\t%d\n", $this->numRequests);
     echo "\n";
 
-    $this->stop();
+    // stop server
+    if ($this->stop)
+    {
+      $this->stop();
+      return;
+    }
+
+    // create a new process
+    if (!$this->stop && $this->daemon->isDaemon() && $this->daemon->process())
+    {
+      // reset (->reboot()
+      $this->run = true;
+      $this->stop = false;
+      $this->numRequests = 0;
+      $this->pid = getmypid();
+
+      unlink($this->pidFile);
+
+      // start server
+      $this->start();
+    }
   }
 
   /*
