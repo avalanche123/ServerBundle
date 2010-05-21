@@ -5,10 +5,9 @@ This is a Mongrel/WEBrick inspired HTTP webserver for Symfony 2.
 
 > **BEWARE:** this Bundle is far away from beeing usable. Right now you can
 > start a single-threaded HTTP webserver. The goal is to implement the cool and
-> just missing features that Mongrel/WEBrick do provide for RoR developers.
->
-> If you're interested in making this Bundle usable for production, feel free
-> to fork and improve it - I'd appreciate pull requests and help.
+> just missing features that Mongrel/WEBrick do provide for RoR developers. If
+> you're interested in making this Bundle usable for production, feel free to
+> fork and improve it - I'd appreciate pull requests and help.
 
 
 REQUIREMENTS
@@ -63,13 +62,10 @@ Start your server via the console:
 
 The default configuration of ServerBundle starts a server listening on `*:1962`
 - I have chosen port `1962` because it is the alphabetic representation
-(latin alphabet) of the Symfony shortcut `sf2` (s[19] f[6] [2]) :)
+(latin alphabet) of the Symfony shortcut `sf2` (s:19 f:6 2) :)
 
-Now, just point your browser to `localhost:1962`:
-
-  http://localhost:1962/
-  http://localhost:1962/hello/Pierre
-
+Now, just point your browser to `localhost:1962` or try to load another
+controller, e.g. `http://localhost:1962/hello/Pierre`:
 
 If you want to change the port, change it in your applications configuration:
 
