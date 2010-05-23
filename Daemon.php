@@ -52,6 +52,36 @@ class Daemon
     $this->container = $container;
     $this->isChild   = false;
     $this->pidFile   = $this->container->getParameter('daemon.pid_file');
+
+    $uid = $this->container->getParameter('daemon.user');
+    $gid = $this->container->getParameter('daemon.group');
+
+    if (null !== $uid && !is_int($uid))
+    {
+      $user = posix_getpwnam($uid);
+
+      if (false === $user)
+      {
+        throw new \Exception(sprintf('User "%s" does not exist', $uid));
+      }
+
+      $uid  = $user['uid'];
+    }
+
+    if (null !== $gid && !is_int($gid))
+    {
+      $group = posix_getgrnam($gid);
+
+      if (false === $group)
+      {
+        throw new \Exception(sprintf('Group "%s" does not exist', $gid));
+      }
+
+      $gid   = $group['gid'];
+    }
+
+    $this->uid = $uid;
+    $this->gid = $gid;
   }
 
   /**
@@ -88,6 +118,16 @@ class Daemon
       $this->isChild = true;
 
       sleep(1);
+
+      if (null !== $this->gid)
+      {
+         posix_setgid($this->gid);
+      }
+
+      if (null !== $this->uid)
+      {
+        posix_setuid($this->uid);
+      }
 
       $this->writePidFile();
 

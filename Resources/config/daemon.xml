@@ -5,6 +5,8 @@
 
   <parameters>
     <parameter key="daemon.class">Bundle\ServerBundle\Daemon</parameter>
+    <parameter key="daemon.user" type="constant">null</parameter>
+    <parameter key="daemon.group" type="constant">null</parameter>
     <parameter key="daemon.pid_file">%kernel.cache_dir%/server.pid</parameter>
   </parameters>
   
