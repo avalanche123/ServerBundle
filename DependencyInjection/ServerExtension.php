@@ -38,6 +38,10 @@ class ServerExtension extends LoaderExtension
         $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
         $configuration->merge($loader->load($this->resources['daemon']));
 
+        if (isset($config['class'])) {
+            $configuration->setParameter('daemon.class', $config['class']);
+        }
+
         if (isset($config['pid_file'])) {
             $configuration->setParameter('daemon.pid_file', $config['pid_file']);
         }
@@ -63,6 +67,10 @@ class ServerExtension extends LoaderExtension
 
         $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
         $configuration->merge($loader->load($this->resources['server']));
+
+        if (isset($config['class'])) {
+            $configuration->setParameter('server.class', $config['class']);
+        }
 
         if (isset($config['address'])) {
             $configuration->setParameter('server.address', $config['address']);
