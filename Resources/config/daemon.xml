@@ -5,10 +5,13 @@
 
   <parameters>
     <parameter key="daemon.class">Bundle\ServerBundle\Daemon</parameter>
+    <parameter key="daemon.pid_file">%kernel.cache_dir%/server.pid</parameter>
   </parameters>
   
   <services>
-    <service id="daemon" class="%daemon.class%" />
+    <service id="daemon" class="%daemon.class%">
+      <argument type="service" id="service_container" />
+    </service>
   </services>
   
 </container>

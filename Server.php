@@ -29,11 +29,9 @@ class Server
   protected $address;
   protected $port;
 
+  protected $maxClients;
   protected $maxRequests;
   protected $numRequests;
-
-  protected $pid;
-  protected $pidFile;
 
   protected $connected;
   protected $context;
@@ -62,8 +60,10 @@ class Server
 
     $address      = $container->getParameter('server.address');
     $port         = $container->getParameter('server.port');
+
+    $maxClients   = $container->getParameter('server.max_clients');
     $maxRequests  = $container->getParameter('server.max_requests_per_child');
-    $pidFile      = $container->getParameter('server.pid_file');
+
     $documentRoot = $container->getParameter('server.document_root');
 
     if ('*' == $address)
@@ -74,17 +74,12 @@ class Server
     $this->address     = $address;
     $this->port        = $port;
 
+    $this->maxClients  = $maxClients;
     $this->maxRequests = $maxRequests;
     $this->numRequests = 0;
 
-    $this->run = true;
-    $this->stop = false;
-
-    if ($this->daemon->isDaemon())
-    {
-      $this->pid     = getmypid();
-      $this->pidFile = $pidFile;
-    }
+    $this->run  = true;
+    $this->stop = $this->daemon->isChild() ? false : true;
 
     $this->connected   = false;
     $this->socket      = null;
@@ -95,22 +90,18 @@ class Server
     declare(ticks = 1);
 
     // register pcntl signal handler
-    pcntl_signal(SIGTERM, array($this, 'pcntlSignalHandler'));
+    pcntl_signal(SIGTERM, array($this, 'pcntl'));
   }
 
-  /**
-   * @param integer $signo
-   */
-  public function pcntlSignalHandler($signo)
+  public function pcntl($signo)
   {
     switch ($signo)
     {
-      // TERMINATE
       case SIGTERM:
         echo "SIGTERM RECIEVED\n\n";
 
         $this->stop = true;
-        $this->run = false;
+        $this->run  = false;
         break;
     }
   }
@@ -131,20 +122,9 @@ class Server
     return $this->port;
   }
 
-  /**
-   * @return integer
-   */
-  public function getPid()
+  public function getMaxClients()
   {
-    return $this->pid;
-  }
-
-  /**
-   * @return string
-   */
-  public function getPidFile()
-  {
-    return $this->pidFile;
+    return $this->maxClients;
   }
 
   /**
@@ -178,7 +158,7 @@ class Server
   public function start()
   {
     // create server socket
-    if (!$this->socket)
+    if (null === $this->socket)
     {
       $this->socket = @stream_socket_server('tcp://'.$this->getAddress().':'.$this->getPort(), $errno, $errstr, STREAM_SERVER_BIND | STREAM_SERVER_LISTEN, $this->context);
 
@@ -198,21 +178,6 @@ class Server
       $this->connected = true;
     }
 
-    // use a pidFile
-    if (null !== $this->pid && null !== $this->pidFile)
-    {
-      // pidFile exists
-      if (file_exists($this->pidFile))
-      {
-        // server already started
-        throw new \Exception(sprintf('Server already started (pid: "%d")', file_get_contents($this->pidFile)));
-      }
-
-      $fp = fopen($this->pidFile, 'w+');
-      fwrite($fp, $this->pid);
-      fclose($fp); unset($fp);
-    }
-
     while (true === $this->run)
     {
       // accept socket
@@ -221,8 +186,7 @@ class Server
       // socket timeout
       if (!$handler)
       {
-        $this->run = false;
-        continue;
+        throw new \Exception('Cannot accept socket');
       }
 
       // read from socket
@@ -231,7 +195,6 @@ class Server
       // empty data
       if (empty($data))
       {
-        // $this->close($handler);
         continue;
       }
 
@@ -245,9 +208,11 @@ class Server
       // skip on non-requests
       if ($message->type != HTTP_MSG_REQUEST)
       {
-        // $this->close($handler);
         continue;
       }
+
+      // increase request counter
+      $this->numRequests++;
 
       $requestMethod   = $message->requestMethod;
       $requestUrl      = $message->requestUrl;
@@ -298,19 +263,11 @@ class Server
       echo sprintf("\t%.0f KB", (memory_get_usage(true) - $memoryUsage) / 1024);
       echo "\n\n";
 
-      // increase request counter
-      $this->numRequests++;
-
       // lifecycle ends here
       if ($this->maxRequests > 0 && $this->numRequests >= $this->maxRequests)
       {
         $this->run = false;
       }
-    }
-
-    if ($handler)
-    {
-      fclose($handler);
     }
 
     // runtime statistics
@@ -319,48 +276,29 @@ class Server
     echo sprintf("REQUESTS:\t%d\n", $this->numRequests);
     echo "\n";
 
+    $this->stop();
+
     // stop server
     if ($this->stop)
     {
-      $this->stop();
-      return;
+      return true;
     }
 
     // create a new process
-    if (!$this->stop && $this->daemon->isDaemon() && $this->daemon->process())
+    if ($this->daemon->isChild())
     {
-      // reset (->reboot()
-      $this->run = true;
-      $this->stop = false;
+      $this->run  = true;
+      $this->stop = $this->daemon->isChild() ? false : true;
       $this->numRequests = 0;
-      $this->pid = getmypid();
 
-      unlink($this->pidFile);
-
-      // start server
-      $this->start();
+      return $this->daemon->restart();
     }
   }
-
-  /*
-  public function close($handler)
-  {
-    // stream_socket_recvfrom($handler, 1, STREAM_PEEK);
-    // feof($handler);
-    // fclose($handler);
-    // unset($handler);
-  }
-  */
 
   /**
    */
   public function stop()
   {
-    if (null !== $this->pid && null !== $this->pidFile)
-    {
-      unlink($this->pidFile);
-    }
-
     if ($this->connected)
     {
       fclose($this->socket);
@@ -368,14 +306,8 @@ class Server
 
       $this->connected = false;
     }
-  }
 
-  /**
-   */
-  public function restart()
-  {
-    $this->stop();
-    $this->start();
+    return true;
   }
 
   /**
@@ -400,6 +332,8 @@ class Server
 
     // send Content-Length header
     fwrite($handler, sprintf("%s: %s\r\n", 'Content-Length', (string) $filesize = filesize($file)));
+
+    /** @TODO send Content-Type header */
 
     // send content
     fwrite($handler, "\r\n");
@@ -445,6 +379,11 @@ class Server
 
     /** @var $kernel Symfony\Foundation\Kernel */
     $kernel = $this->container->getKernelService();
+
+    if (!$kernel->isBooted())
+    {
+      $kernel->boot();
+    }
 
     /**
      * @TODO extract _GET/_POST parameters, _COOKIE and _FILES
@@ -492,7 +431,7 @@ class Server
     fwrite($handler, $content);
 
     // reboot kernel
-    $kernel->reboot();
+    $kernel->shutdown();
 
     return array($statusCode, $statusMessage, strlen($content));
   }
@@ -511,7 +450,7 @@ class Server
     $headers         = $message->headers;
 
     // exception status
-    echo "EXCEPTION:\t".$e->getMessage()."\n";
+    echo "EXCEPTION:\t".$e->getMessage()."\n\n";
 
     // determine status code
     switch (get_class($e))

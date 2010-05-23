@@ -76,23 +76,20 @@ class StartCommand extends DaemonCommand
     }
     */
 
-    $daemonize = $input->getOption('daemonize');
-    $isDaemon  = false;#
-
-    // daemonize
-    if ($daemonize)
-    {
-      $daemon   = $this->container->getDaemonService();
-      $isDaemon = $daemon->process();
-    }
-
-    if (!$daemonize || ($daemonize && $isDaemon))
+    if (!$input->getOption('daemonize'))
     {
       $server = $this->container->getServerService();
 
-      $output->writeln('server started');
-
       return $server->start();
+    }
+
+    if ($this->container->getDaemonService()->start())
+    {
+      $output->writeln('server started');
+    }
+    else
+    {
+      $output->writeln('cannot start server');
     }
   }
 }

@@ -35,18 +35,13 @@ class StopCommand extends DaemonCommand
    */
   protected function execute(InputInterface $input, OutputInterface $output)
   {
-    $pidFile = $this->container->getParameter('server.pid_file');
-
-    // pid file exists
-    if (file_exists($pidFile) && is_file($pidFile))
+    if ($this->container->getDaemonService()->stop())
     {
-      // get pid
-      $pid = file_get_contents($pidFile);
-
       $output->writeln('server stopped');
-
-      // send SIGTERM signal
-      posix_kill($pid, SIGTERM);
+    }
+    else
+    {
+      $output->writeln('cannot stop server');
     }
   }
 }

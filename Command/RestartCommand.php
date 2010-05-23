@@ -35,31 +35,24 @@ class RestartCommand extends DaemonCommand
    */
   protected function execute(InputInterface $input, OutputInterface $output)
   {
-    $pidFile = $this->container->getParameter('server.pid_file');
+    $daemon = $this->container->getDaemonService();
 
-    // pid file exists
-    if (file_exists($pidFile) && is_file($pidFile))
+    if ($daemon->stop())
     {
-      // get pid
-      $pid = file_get_contents($pidFile);
-
       $output->writeln('server stopped');
-
-      // send SIGTERM signal
-      posix_kill($pid, SIGTERM);
+    }
+    else
+    {
+      $output->writeln('cannot stop server');
     }
 
-    // daemonize
-    $daemon   = $this->container->getDaemonService();
-    $isDaemon = $daemon->process();
-
-    if ($isDaemon)
+    if ($daemon->start())
     {
-      $server = $this->container->getServerService();
-
       $output->writeln('server started');
-
-      return $server->start();
+    }
+    else
+    {
+      $output->writeln('cannot start server');
     }
   }
 }
