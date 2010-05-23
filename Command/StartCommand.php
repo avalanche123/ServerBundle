@@ -24,72 +24,51 @@ use Symfony\Components\Console\Input\InputArgument,
  */
 class StartCommand extends DaemonCommand
 {
-  /**
-   * @see Command
-   */
-  protected function configure()
-  {
     /**
-     * @TODO implement mongrel_rails like options
-     * @link http://github.com/fauna/mongrel/blob/master/bin/mongrel_rails#L22
+     * @see Command
      */
-    $this
-      ->setDefinition(array(
-        new InputOption('daemonize', '-d', InputOption::PARAMETER_NONE, 'Run daemonized in the background.'),
-        new InputOption('environment', '-e', InputOption::PARAMETER_OPTIONAL, 'Symfony environment to run as.', 'production'),
-        new InputOption('address', '-a', InputOption::PARAMETER_OPTIONAL, 'Address to bind to.', '*'),
-        new InputOption('port', '-p', InputOption::PARAMETER_OPTIONAL, 'Which port to bind to.', 1962),
-      ))
-      ->setName('server:start')
-    ;
-  }
+    protected function configure()
+    {
+        /**
+         * @TODO implement mongrel_rails like options
+         * @link http://github.com/fauna/mongrel/blob/master/bin/mongrel_rails#L22
+         */
+        $this
+          ->setDefinition(array(
+                new InputOption('daemonize', '-d', InputOption::PARAMETER_NONE, 'Run daemonized in the background.'),
+                new InputOption('environment', '-e', InputOption::PARAMETER_OPTIONAL, 'Symfony environment to run as.', 'production'),
+                new InputOption('address', '-a', InputOption::PARAMETER_OPTIONAL, 'Address to bind to.', '*'),
+                new InputOption('port', '-p', InputOption::PARAMETER_OPTIONAL, 'Which port to bind to.', 1962),
+            ))
+            ->setName('server:start')
+        ;
+    }
 
-  /**
-   * @see Command
-   */
-  protected function execute(InputInterface $input, OutputInterface $output)
-  {
     /**
-    /**
-     * @TODO implement mongrel_rails like runtime configuration
-     * @link http://github.com/fauna/mongrel/blob/master/bin/mongrel_rails#L22
-     *
-     * Sequence
-     *   1) runtime configuration [-defaults]
-     *   2) config.yml
-     *   3) server.xml
+     * @see Command
      */
-
-    /*
-    $environment = $input->getOption('environment');
-    $port        = $input->getOption('port');
-    $address     = $input->getOption('address');
-
-    if ($this->container->getParameter('server.port') != $port)
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
-      $this->container->setParameter('server.port', $port);
-    }
+        /**
+         * @TODO implement mongrel_rails like runtime configuration
+         * @link http://github.com/fauna/mongrel/blob/master/bin/mongrel_rails#L22
+         *
+         * Sequence
+         *   1) runtime configuration [-defaults]
+         *   2) config.yml
+         *   3) server.xml
+         */
 
-    if ($this->container->getParameter('server.address') != $address)
-    {
-      $this->container->setParameter('server.address', $address);
-    }
-    */
+        if (!$input->getOption('daemonize')) {
+            $server = $this->container->getServerService();
 
-    if (!$input->getOption('daemonize'))
-    {
-      $server = $this->container->getServerService();
+            return $server->start();
+        }
 
-      return $server->start();
+        if ($this->container->getDaemonService()->start()) {
+            $output->writeln('server started');
+        } else {
+            $output->writeln('cannot start server');
+        }
     }
-
-    if ($this->container->getDaemonService()->start())
-    {
-      $output->writeln('server started');
-    }
-    else
-    {
-      $output->writeln('cannot start server');
-    }
-  }
 }

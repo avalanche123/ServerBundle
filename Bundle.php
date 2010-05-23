@@ -23,11 +23,11 @@ use Symfony\Foundation\Bundle\Bundle as BaseBundle,
  */
 class Bundle extends BaseBundle
 {
-  /**
-   * @param ContainerInterface $container
-   */
-  public function buildContainer(ContainerInterface $container)
-  {
-    Loader::registerExtension(new ServerExtension());
-  }
+    /**
+     * @param ContainerInterface $container
+     */
+    public function buildContainer(ContainerInterface $container)
+    {
+      Loader::registerExtension(new ServerExtension());
+    }
 }

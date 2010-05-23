@@ -22,18 +22,18 @@ use Symfony\Components\Console\Input\InputInterface,
  */
 class StatusCommand extends Command
 {
-  /**
-   * @see Command
-   */
-  protected function configure()
-  {
-    $this->setName('server:status');
-  }
+    /**
+     * @see Command
+     */
+    protected function configure()
+    {
+      $this->setName('server:status');
+    }
 
-  /**
-   * @see Command
-   */
-  protected function execute(InputInterface $input, OutputInterface $output)
-  {
-  }
+    /**
+     * @see Command
+     */
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+    }
 }

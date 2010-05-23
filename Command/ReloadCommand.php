@@ -22,18 +22,18 @@ use Symfony\Components\Console\Input\InputInterface,
  */
 class ReloadCommand extends DaemonCommand
 {
-  /**
-   * @see Command
-   */
-  protected function configure()
-  {
-    $this->setName('server:reload');
-  }
+    /**
+     * @see Command
+     */
+    protected function configure()
+    {
+        $this->setName('server:reload');
+    }
 
-  /**
-   * @see Command
-   */
-  protected function execute(InputInterface $input, OutputInterface $output)
-  {
-  }
+    /**
+     * @see Command
+     */
+    protected function execute(InputInterface $input, OutputInterface $output)
+    {
+    }
 }

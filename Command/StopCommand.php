@@ -22,26 +22,23 @@ use Symfony\Components\Console\Input\InputInterface,
  */
 class StopCommand extends DaemonCommand
 {
-  /**
-   * @see Command
-   */
-  protected function configure()
-  {
-    $this->setName('server:stop');
-  }
+    /**
+     * @see Command
+     */
+    protected function configure()
+    {
+      $this->setName('server:stop');
+    }
 
-  /**
-   * @see Command
-   */
-  protected function execute(InputInterface $input, OutputInterface $output)
-  {
-    if ($this->container->getDaemonService()->stop())
+    /**
+     * @see Command
+     */
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
-      $output->writeln('server stopped');
+        if ($this->container->getDaemonService()->stop()) {
+          $output->writeln('server stopped');
+        } else {
+          $output->writeln('cannot stop server');
+        }
     }
-    else
-    {
-      $output->writeln('cannot stop server');
-    }
-  }
 }

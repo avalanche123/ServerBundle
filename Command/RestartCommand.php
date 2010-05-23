@@ -22,37 +22,31 @@ use Symfony\Components\Console\Input\InputInterface,
  */
 class RestartCommand extends DaemonCommand
 {
-  /**
-   * @see Command
-   */
-  protected function configure()
-  {
-    $this->setName('server:restart');
-  }
-
-  /**
-   * @see Command
-   */
-  protected function execute(InputInterface $input, OutputInterface $output)
-  {
-    $daemon = $this->container->getDaemonService();
-
-    if ($daemon->stop())
+    /**
+     * @see Command
+     */
+    protected function configure()
     {
-      $output->writeln('server stopped');
-    }
-    else
-    {
-      $output->writeln('cannot stop server');
+        $this->setName('server:restart');
     }
 
-    if ($daemon->start())
+    /**
+     * @see Command
+     */
+    protected function execute(InputInterface $input, OutputInterface $output)
     {
-      $output->writeln('server started');
+        $daemon = $this->container->getDaemonService();
+
+        if ($daemon->stop()) {
+            $output->writeln('server stopped');
+        } else {
+            $output->writeln('cannot stop server');
+        }
+
+        if ($daemon->start()) {
+            $output->writeln('server started');
+        } else {
+            $output->writeln('cannot start server');
+        }
     }
-    else
-    {
-      $output->writeln('cannot start server');
-    }
-  }
 }

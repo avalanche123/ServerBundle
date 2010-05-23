@@ -20,23 +20,23 @@ use Symfony\Framework\WebBundle\Controller;
  */
 class DefaultController extends Controller
 {
-  /**
-   * @return Response
-   */
-  public function infoAction()
-  {
-    $server = $this->container->getServerService();
+    /**
+     * @return Response
+     */
+    public function infoAction()
+    {
+        $server = $this->container->getServerService();
 
-    return $this->render('ServerBundle:Default:info', array('server' => $server));
-  }
+        return $this->render('ServerBundle:Default:info', array('server' => $server));
+    }
 
-  /**
-   * @return Response
-   */
-  public function statusAction()
-  {
-    $server = $this->container->getServerService();
+    /**
+     * @return Response
+     */
+    public function statusAction()
+    {
+        $server = $this->container->getServerService();
 
-    return $this->render('ServerBundle:Default:status', array('server' => $server));
-  }
+        return $this->render('ServerBundle:Default:status', array('server' => $server));
+    }
 }

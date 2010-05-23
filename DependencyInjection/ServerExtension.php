@@ -22,95 +22,88 @@ use Symfony\Components\DependencyInjection\Loader\LoaderExtension,
  */
 class ServerExtension extends LoaderExtension
 {
-  protected $resources = array(
-    'daemon' => 'daemon.xml',
-    'server' => 'server.xml'
-  );
+    protected $resources = array(
+        'daemon' => 'daemon.xml',
+        'server' => 'server.xml'
+    );
 
-  /**
-   * @param array $config
-   * @return BuilderConfiguration
-   */
-  public function daemonLoad($config)
-  {
-    $configuration = new BuilderConfiguration();
-
-    $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
-    $configuration->merge($loader->load($this->resources['daemon']));
-
-    if (isset($config['pid_file']))
+    /**
+     * @param array $config
+     * @return BuilderConfiguration
+     */
+    public function daemonLoad($config)
     {
-      $configuration->setParameter('daemon.pid_file', $config['pid_file']);
+        $configuration = new BuilderConfiguration();
+
+        $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
+        $configuration->merge($loader->load($this->resources['daemon']));
+
+        if (isset($config['pid_file'])) {
+            $configuration->setParameter('daemon.pid_file', $config['pid_file']);
+        }
+
+        if (isset($config['user'])) {
+            $configuration->setParameter('daemon.user', $config['user']);
+        }
+
+        if (isset($config['group'])) {
+            $configuration->setParameter('daemon.group', $config['group']);
+        }
+
+        return $configuration;
     }
 
-    if (isset($config['user']))
+    /**
+     * @param array $config
+     * @return BuilderConfiguration
+     */
+    public function serverLoad($config)
     {
-      $configuration->setParameter('daemon.user', $config['user']);
+        $configuration = new BuilderConfiguration();
+
+        $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
+        $configuration->merge($loader->load($this->resources['server']));
+
+        if (isset($config['address'])) {
+            $configuration->setParameter('server.address', $config['address']);
+        }
+
+        if (isset($config['port'])) {
+            $configuration->setParameter('server.port', $config['port']);
+        }
+
+        if (isset($config['max_requests_per_child'])) {
+            $configuration->setParameter('server.max_requests_per_child', $config['max_requests_per_child']);
+        }
+
+        if (isset($config['document_root'])) {
+            $configuration->setParameter('server.document_root', $config['document_root']);
+        }
+
+        return $configuration;
     }
 
-    if (isset($config['group']))
+    /**
+     * @return string
+     */
+    public function getXsdValidationBasePath()
     {
-      $configuration->setParameter('daemon.group', $config['group']);
+        return __DIR__.'/../Resources/config/';
     }
 
-    return $configuration;
-  }
-
-  /**
-   * @param array $config
-   * @return BuilderConfiguration
-   */
-  public function serverLoad($config)
-  {
-    $configuration = new BuilderConfiguration();
-
-    $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
-    $configuration->merge($loader->load($this->resources['server']));
-
-    if (isset($config['address']))
+    /**
+     * @return string
+     */
+    public function getNamespace()
     {
-      $configuration->setParameter('server.address', $config['address']);
+        return 'http://www.symfony-project.org/schema/dic/server';
     }
 
-    if (isset($config['port']))
+    /**
+     * @return string
+     */
+    public function getAlias()
     {
-      $configuration->setParameter('server.port', $config['port']);
+        return 'server';
     }
-
-    if (isset($config['max_requests_per_child']))
-    {
-      $configuration->setParameter('server.max_requests_per_child', $config['max_requests_per_child']);
-    }
-
-    if (isset($config['document_root']))
-    {
-      $configuration->setParameter('server.document_root', $config['document_root']);
-    }
-
-    return $configuration;
-  }
-
-  /**
-   * @return string
-   */
-  public function getXsdValidationBasePath()
-  {
-    return __DIR__.'/../Resources/config/';
-  }
-
-  /**
-   * @return string
-   */
-  public function getNamespace()
-  {
-    return 'http://www.symfony-project.org/schema/dic/server';
-  }
-
-  /**
-   * @return string
-   */
-  public function getAlias()
-  {
-    return 'server';
-  }
 }

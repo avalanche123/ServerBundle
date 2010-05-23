@@ -22,13 +22,13 @@ use Symfony\Components\Console\Input\InputInterface,
  */
 abstract class Command extends BaseCommand
 {
-  protected $container;
+    protected $container;
 
-  /**
-   * @see Command
-   */
-  protected function initialize(InputInterface $input, OutputInterface $output)
-  {
-    $this->container = $this->application->getKernel()->getContainer();
-  }
+    /**
+     * @see Command
+     */
+    protected function initialize(InputInterface $input, OutputInterface $output)
+    {
+      $this->container = $this->application->getKernel()->getContainer();
+    }
 }
