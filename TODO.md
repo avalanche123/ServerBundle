@@ -9,9 +9,9 @@ TODO
 
 Command
 -------
- * implement mongrel_rails like options
+ * implement mongrel_rails like options (work in progress)
  * implement mongrel_rails like runtime configuration
- * implement process daemonizing
+ * implement process daemonizing (work in progress, almost finished)
 
 
 Controller
@@ -38,11 +38,11 @@ Logging
 
 Server
 ------
- * move socket logic to ServerBundle\Socket
+ * move socket logic to ServerBundle\Socket (work in progress, almost finished)
  * add interprocess communication (IPC)
- * add process forking (spawn children) and management
+ * add process forking (spawn children) and management (work in progress)
  * check multi-threading in child processes
- * separate dispatching into its own classes (symfony, static file, error)
+ * separate dispatching into its own classes (symfony, static file, error) (work in progress)
  * improve dispatching logic to be more granular and user friendly
 
 
