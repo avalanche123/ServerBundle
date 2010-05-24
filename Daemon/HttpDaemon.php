@@ -2,7 +2,7 @@
 
 namespace Bundle\ServerBundle\Daemon;
 
-use Bundle\ServerBundle\Server\ServerInterface,
+use Bundle\ServerBundle\Server\HttpServer,
     Bundle\ServerBundle\Daemon\Daemon;
 
 /*
@@ -24,17 +24,22 @@ class HttpDaemon extends Daemon
     protected $server;
 
     /**
-     * @param ServerInterface $server
+     * @param HttpServer $server
      * @param string $pidFile
      * @param integer|string $user (optional)
      * @param integer|string $group (optional)
      * @param integer $umask (optional)
      */
-    public function __construct(ServerInterface $server, $pidFile, $user = null, $group = null, $umask = null)
+    public function __construct(HttpServer $server, $pidFile, $user = null, $group = null, $umask = null)
     {
         parent::__construct($pidFile, $user, $group, $umask);
 
         $this->server = $server;
+
+        declare(ticks = 1);
+
+        // pcntl signal handlers
+        pcntl_signal(SIGTERM, array($this, 'signalHandler'));
     }
 
     /**
@@ -43,5 +48,17 @@ class HttpDaemon extends Daemon
     protected function process()
     {
         return $this->server->start();
+    }
+
+    /**
+     * @param integer $signo
+     */
+    public function signalHandler($signo)
+    {
+        switch ($signo) {
+            case SIGTERM:
+                $this->server->shutdown();
+            break;
+        }
     }
 }

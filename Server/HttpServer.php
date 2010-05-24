@@ -3,7 +3,7 @@
 namespace Bundle\ServerBundle\Server;
 
 use Bundle\ServerBundle\Server\Server,
-    Bundle\ServerBundle\Daemon\DaemonInterface,
+    Bundle\ServerBundle\Daemon\HttpDaemon,
     Bundle\ServerBundle\EventDispatcher,
     Symfony\Components\EventDispatcher\Event;
 
@@ -29,13 +29,13 @@ class HttpServer extends Server
     protected $servers;
 
     /**
-     * @param DaemonInterface $daemon
+     * @param HttpDaemon $daemon
      * @param EventDispatcher $dispatcher
      * @param array $options (optional)
      *
      * @throws \InvalidArgumentException When unsupported option is provided
      */
-    public function __construct(DaemonInterface $daemon, EventDispatcher $dispatcher, array $options = array())
+    public function __construct(HttpDaemon $daemon, EventDispatcher $dispatcher, array $options = array())
     {
         parent::__construct($daemon);
 
@@ -61,25 +61,6 @@ class HttpServer extends Server
 
         $this->clients = array();
         $this->servers = array();
-
-        // pcntl
-        declare(ticks = 1);
-
-        // signal handler
-        pcntl_signal(SIGTERM, array($this, 'signalHandler'));
-
-    }
-
-    /**
-     * @param integer $signo
-     */
-    public function signalHandler($signo)
-    {
-        switch ($signo) {
-            case SIGTERM:
-                // @TODO exit loop, shutdown
-            break;
-        }
     }
 
     /**
@@ -94,6 +75,14 @@ class HttpServer extends Server
      * @return boolean
      */
     public function stop()
+    {
+        return true;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function shutdown()
     {
         return true;
     }
