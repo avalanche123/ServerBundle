@@ -21,10 +21,10 @@ interface ServerInterface
     /**
      * @return boolean
      */
-    public function start();
+    function start();
 
     /**
      * @return boolean
      */
-    public function stop();
+    function stop();
 }

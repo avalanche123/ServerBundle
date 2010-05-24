@@ -21,12 +21,10 @@ interface DaemonInterface
     /**
      * @return boolean
      */
-    public function start();
+    function start();
 
     /**
      * @return boolean
      */
-    public function stop();
-
-    protected function process();
+    function stop();
 }

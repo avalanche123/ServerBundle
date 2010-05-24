@@ -24,10 +24,10 @@ interface FilterInterface
     /**
      * @param EventDispatcher $dispatcher
      */
-    public function register(EventDispatcher $dispatcher);
+    function register(EventDispatcher $dispatcher);
 
     /**
      * @param Event $event
      */
-    public function filter(Event $event);
+    function filter(Event $event);
 }

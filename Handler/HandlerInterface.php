@@ -24,10 +24,10 @@ interface HandlerInterface
     /**
      * @param EventDispatcher $dispatcher
      */
-    public function register(EventDispatcher $dispatcher);
+    function register(EventDispatcher $dispatcher);
 
     /**
      * @param Event $event
      */
-    public function handle(Event $event);
+    function handle(Event $event);
 }
