@@ -30,8 +30,8 @@ abstract class Socket implements SocketInterface
      */
     public function __construct($socket = null)
     {
-        if (null !== $socket) {
-            $this->context   = stream_create_context();
+        if (null === $socket) {
+            $this->context   = stream_context_create();
             $this->connected = false;
         } else {
             if (!is_resource($socket)) {
@@ -52,7 +52,7 @@ abstract class Socket implements SocketInterface
      */
     public function __destruct()
     {
-        $this->close();
+        $this->disconnect();
     }
 
     /**
