@@ -21,6 +21,17 @@ Controller
  * gather and display server status
 
 
+Database
+--------
+ * check if and how background process, forking etc ... affects
+   database connections (e.g. Doctrine) -- I think they'll lose
+   connection after forking or during the long lifetime of such
+   a background process (daemon). Maybe we must re-initialise
+   those bundles, that's why I was thinking about booting and
+   shutting down the kernel after every request. A more elegant
+   solution may be rebooting only database-using bundles.
+
+
 Exception
 ---------
  * improve error handling in general
