@@ -88,6 +88,11 @@ abstract class Daemon implements DaemonInterface
 
     /**
      * @return boolean
+     */
+    abstract protected function process();
+
+    /**
+     * @return boolean
      *
      * @throws \Exception If a daemon is already started
      */
