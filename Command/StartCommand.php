@@ -60,9 +60,9 @@ class StartCommand extends DaemonCommand
          */
 
         if (!$input->getOption('daemonize')) {
-            $server = $this->container->getServerService();
+            $output->writeln('server started');
 
-            return $server->start();
+            return $this->container->getServerService()->start();
         }
 
         if ($this->container->getDaemonService()->start()) {
