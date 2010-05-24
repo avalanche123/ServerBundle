@@ -44,14 +44,4 @@ class HttpDaemon extends Daemon
     {
         return $this->server->start();
     }
-
-    /**
-     * @return boolean
-     */
-    public function restart()
-    {
-        $this->removePidFile();
-
-        return $this->start();
-    }
 }
