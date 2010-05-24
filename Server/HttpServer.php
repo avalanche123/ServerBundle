@@ -26,16 +26,32 @@ class HttpServer extends Server
     protected $options;
     protected $clients;
     protected $servers;
+    protected $shutdown;
 
     /**
      * @param EventDispatcher $dispatcher
      * @param array $options (optional)
      *
+     * @throws \Exception If pecl_http extension is not loaded
      * @throws \InvalidArgumentException When unsupported option is provided
+     * @throws \InvalidArgumentException If invalid socket client class is provided
+     * @throws \InvalidArgumentException If invalid socket server class is provided
+     * @throws \InvalidArgumentException If invalid socket server client class is provided
      */
     public function __construct(EventDispatcher $dispatcher, array $options = array())
     {
+        if (!extension_loaded('http')) {
+            throw new \Exception('pecl_http extension not loaded.');
+        }
+
         $this->dispatcher = $dispatcher;
+        $this->clients    = array();
+        $this->servers    = array();
+        $this->shutdown   = false;
+
+        $clientClass       = 'Bundle\\ServerBundle\\Socket\\Http\\ClientSocket';
+        $serverClass       = 'Bundle\\ServerBundle\\Socket\\Http\\ServerSocket';
+        $serverClientClass = 'Bundle\\ServerBundle\\Socket\\Http\\ServerClientSocket';
 
         $this->options = array(
             'protocol'                   => 'tcp',
@@ -44,9 +60,9 @@ class HttpServer extends Server
             'max_clients'                => 100,
             'max_requests_per_child'     => 1000,
             'document_root'              => null,
-            'socket_client_class'        => 'Bundle\\ServerBundle\\Socket\\Http\\ClientSocket',
-            'socket_server_class'        => 'Bundle\\ServerBundle\\Socket\\Http\\ServerSocket',
-            'socket_server_client_class' => 'Bundle\\ServerBundle\\Socket\\Http\\ServerClientSocket'
+            'socket_client_class'        => $clientClass,
+            'socket_server_class'        => $serverClass,
+            'socket_server_client_class' => $serverClientClass
         );
 
         // check option names
@@ -56,8 +72,32 @@ class HttpServer extends Server
 
         $this->options = array_merge($this->options, $options);
 
-        $this->clients = array();
-        $this->servers = array();
+        // check socket client class
+        if (!$this->checkSocketClass($clientClass, $this->options['socket_client_class'])) {
+            throw new \InvalidArgumentException(sprintf('Client socket class must be a sublass of "%s"', $clientClass));
+        }
+
+        // check socket server class
+        if (!$this->checkSocketClass($serverClass, $this->options['socket_server_class'])) {
+            throw new \InvalidArgumentException(sprintf('Server socket class must be a sublass of "%s"', $serverClass));
+        }
+
+        // check socket server client class
+        if (!$this->checkSocketClass($serverClientClass, $this->options['socket_server_client_class'])) {
+            throw new \InvalidArgumentException(sprintf('Server client socket class must be a sublass of "%s"', $serverClientClass));
+        }
+    }
+
+    /**
+     * @param string $expected
+     * @param string $provided
+     * @return boolean
+     */
+    protected function checkSocketClass($expected, $provided)
+    {
+        $r = new \ReflectionClass($provided);
+
+        return $r->getName() == $expected || $r->isSubclassOf($expected);
     }
 
     /**
@@ -65,6 +105,136 @@ class HttpServer extends Server
      */
     public function start()
     {
+        $timer = time();
+
+        // create server socket
+        $this->createServerSocket();
+
+        // @TODO spawn max_clients?
+
+        // create select sets
+        $read   = $this->createReadSet();
+        $write  = $this->createWriteSet();
+        $except = $this->createExceptSet();
+
+        // max requests
+        $requests = 0;
+
+        while (
+            !$this->shutdown &&                                             // daemon stop?
+            $requests < $this->options['max_requests_per_child'] &&         // max requests?
+            false !== ($events = @stream_select($read, $write, $except, 0)) // socket alive?
+        ) {
+            if ($events > 0) {
+                foreach ($read as $socket) {
+                    if ($this->isServerSocket($socket)) {
+                        $server = $this->findSocket($socket);
+                        $client = $server->accept();
+
+                        // store client socket
+                        $this->clients[(integer) $client->getSocket()] = $client;
+
+                        // @TODO max clients check
+                    }
+
+                    if ($this->isClientSocket($socket)) {
+                        $client  = $this->findSocket($socket);
+
+                        // @TODO see the following lines
+
+                        // something like this to notify the handlers, until ...
+                        // ... one handler returns a HttpMessage? Where do I ...
+                        // ... store the HttpMessage and how do I get into the ...
+                        // ... next round of this loop to be written? I think ...
+                        // ... I need write buffers in clients? :)
+
+                        /**
+                         * $message = new HttpMessage($data);
+                         * $version = $message->getHttpVersion();
+                         * $url     = $message->getRequestUrl();
+                         * $method  = $message->getRequestMethod();
+                         * $headers = $message->getHeaders();
+                         * $body    = $message->getBody();
+                         */
+
+                        // $message = $client->doRead(); // not ->read()!
+
+                        /* $this->dispatcher->notifyUntil(new Event($message, 'server.request', array(
+                            'socket' => $client
+                        ))); */
+
+                        // @TODO is that correct, here?
+                        $requests++;
+                    }
+                }
+
+                foreach ($write as $socket) {
+                    if ($this->isClientSocket($socket)) {
+                        $client = $this->findSocket($socket);
+
+                        if (!$client->isConnected()) {
+                            $client->connect();
+                        }
+
+                        // @TODO see the following lines
+
+                        // something like this to filter the generated ...
+                        // ... HttpMessage which was generated and bufferd ...
+                        // ... by the previous $read round of this loop. I ...
+                        // ... think I really need write buffers in clients? ;O
+
+                        /**
+                         * $message = new HttpMessage();
+                         * $message->setType(HTTP_MSG_RESPONSE);
+                         * $message->setHttpVersion($version);
+                         * $message->setResponseCode($statusCode);
+                         * $message->setResponseStatus($statusMessage);
+                         * $message->setHeaders($headers);
+                         * $message->setBody($body);
+                         */
+
+                        /* $message = $this->dispatcher->filter(new Event($data, 'server.response', array(
+                            'socket' => $client
+                        ))) */
+
+                        // $client->doWrite($message); // not ->write()!
+
+                        // @TODO is that correct, here?
+                        $requests++;
+                    }
+                }
+
+                foreach($except as $socket) {
+                    if ($this->isClientSocket($socket)) {
+                        $client = $this->findSocket($socket);
+                        $id     = (integer) $client->getSocket();
+
+                        $client->disconnect();
+
+                        if (isset($this->clients[$id])) {
+                            unset($this->clients[$id]);
+                        }
+                    }
+                }
+            }
+
+            // only once a second
+            if (time() - $timer > 1) {
+                foreach ($this->clients as $client) {
+                    $client->timer();
+                }
+
+                $timer = time();
+            }
+
+            $rem = $this->cleanSockets();
+
+            // override select sets
+            $read   = $this->createReadSet();
+            $write  = $this->createWriteSet();
+            $except = $this->createExceptSet();
+        }
+
         return true;
     }
 
@@ -73,6 +243,14 @@ class HttpServer extends Server
      */
     public function stop()
     {
+        foreach ($this->clients as $client) {
+            $client->disconnect();
+        }
+
+        foreach ($this->servers as $server) {
+            $server->disconnect();
+        }
+
         return true;
     }
 
@@ -81,7 +259,7 @@ class HttpServer extends Server
      */
     public function shutdown()
     {
-        return true;
+        $this->shutdown = true;
     }
 
     /**
@@ -91,10 +269,10 @@ class HttpServer extends Server
     {
         $class  = $this->options['socket_client_class'];
         $client = new $class($this->options['protocol'], $this->options['address'], $this->options['port']);
-        $id     = (integer) $client->getSocket();
+        $client->connect();
 
         // store socket
-        $this->clients[$id] = $client;
+        $this->clients[(integer) $client->getSocket()] = $client;
 
         return $client;
     }
@@ -106,12 +284,38 @@ class HttpServer extends Server
     {
         $class  = $this->options['socket_server_class'];
         $server = new $class($this->options['socket_server_client_class'], $this->options['protocol'], $this->options['address'], $this->options['port']);
-        $id     = (integer) $server->getSocket();
+        $server->connect();
 
         // store socket
-        $this->servers[$id] = $server;
+        $this->servers[(integer) $server->getSocket()] = $server;
 
         return $server;
+    }
+
+    protected function isClientSocket($socket)
+    {
+        if (!is_resource($socket)) {
+            throw new \Exception('Socket must be a valid resource');
+        }
+
+        if (isset($this->clients[(integer) $socket])) {
+            return true;
+        }
+
+        return false;
+    }
+
+    protected function isServerSocket($socket)
+    {
+        if (!is_resource($socket)) {
+            throw new \Exception('Socket must be a valid resource');
+        }
+
+        if (isset($this->servers[(integer) $socket])) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
