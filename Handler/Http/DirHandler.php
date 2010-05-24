@@ -47,5 +47,13 @@ class DirHandler extends HttpHandler
     public function handle(Event $event)
     {
         $finder = new Finder();
+
+        // find all files in the document_root/$dir
+
+        // create a list view
+        // >> ExceptionController-like view renderer would be cool
+
+        // @TODO must be clarified how the dispatching of the event works
+        // return $event / $list / whatever
     }
 }

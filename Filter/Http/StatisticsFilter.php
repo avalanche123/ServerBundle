@@ -36,5 +36,10 @@ class StatisticsFilter extends HttpFilter
      */
     public function filter(Event $event)
     {
+        // collect statistics about the response, because it will be send ...
+        // ... after that filter immediately. Dunno where to store that stats!
+
+        // @TODO must be clarified how the dispatching of the event works
+        // return $event / $data / whatever
     }
 }

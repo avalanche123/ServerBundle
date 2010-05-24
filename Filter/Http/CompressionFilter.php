@@ -46,6 +46,16 @@ class CompressionFilter extends HttpFilter
      */
     public function filter(Event $event)
     {
+        // parse headers, check which compression is available
+
+        // determine best (deflate > gzip) for available compressions
+
+        // compress data
+        // $data = $this->deflate($date);
+        // $data = $this->gzip($data)
+
+        // @TODO must be clarified how the dispatching of the event works
+        // return $event / $data / whatever
     }
 
     /**

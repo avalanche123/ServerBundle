@@ -35,5 +35,11 @@ class ErrorHandler extends HttpHandler
      */
     public function handle(Event $event)
     {
+        // ExceptionController-like view renderer would be cool
+
+        // determine error source, set headers (e.g. 404, 500) etc ...
+
+        // @TODO must be clarified how the dispatching of the event works
+        // return $event / $error / whatever
     }
 }

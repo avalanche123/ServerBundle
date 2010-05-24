@@ -46,5 +46,24 @@ class SymfonyHandler extends HttpHandler
      */
     public function handle(Event $event)
     {
+        // boot kernel?
+        // if (!$kernel->isBooted()) {
+        //     $kernel->boot();
+        // }
+
+        // create fake environment with HttpMessage and Kernel data ...
+        // _SERVER, _GET, _POST, _REQUEST, _COOKIE, _FILES, _SESSION?
+
+        // create fake requests with fake environment
+        // $request = Request::create( $get, $post, etc ... );
+
+        // dispatch fake requests, main & raw?
+        // $response = $kernel->handle($request);
+
+        // shutdown kernel?
+        // $kernel->shutdown();
+
+        // @TODO must be clarified how the dispatching of the event works
+        // return $event / $response / whatever
     }
 }

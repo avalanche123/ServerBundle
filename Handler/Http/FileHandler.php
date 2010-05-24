@@ -45,5 +45,13 @@ class FileHandler extends HttpHandler
      */
     public function handle(Event $event)
     {
+        // check for file existance in document_root, etc ...
+
+        // $data = file_get_contents($file);
+
+        // determine content type, add headers, etc
+
+        // @TODO must be clarified how the dispatching of the event works
+        // return $event / $data / whatever
     }
 }
