@@ -1,9 +1,9 @@
 <?php
 
-namespace Bundle\ServerBundle\Daemon\Http;
+namespace Bundle\ServerBundle\Daemon;
 
 use Bundle\ServerBundle\Server\ServerInterface,
-    Bundle\ServerBundle\Daemon\Daemon as BaseDaemon;
+    Bundle\ServerBundle\Daemon\Daemon;
 
 /*
  * This file is part of the ServerBundle package.
@@ -19,7 +19,7 @@ use Bundle\ServerBundle\Server\ServerInterface,
  * @subpackage Daemon
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-class Daemon extends BaseDaemon
+class HttpDaemon extends Daemon
 {
     protected $server;
 
