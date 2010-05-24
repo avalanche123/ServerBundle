@@ -46,9 +46,9 @@ class ClientSocket extends HttpSocket
     /**
      * @return HttpMessage
      */
-    public function read()
+    public function doRead()
     {
-        $data = parent::read();
+        $data = $this->read();
 
         if (empty($data)) {
             return false;
@@ -70,12 +70,12 @@ class ClientSocket extends HttpSocket
     /**
      * @param HttpMessage $message
      */
-    public function write(HttpMessage $message)
+    public function doWrite(HttpMessage $message)
     {
-        return parent::write($message->toString());
+        return $this->write($message->toString());
     }
 
-    public function onTimer()
+    public function timer()
     {
         // keep alive check
     }
