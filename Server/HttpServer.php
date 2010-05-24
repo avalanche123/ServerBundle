@@ -3,7 +3,6 @@
 namespace Bundle\ServerBundle\Server;
 
 use Bundle\ServerBundle\Server\Server,
-    Bundle\ServerBundle\Daemon\HttpDaemon,
     Bundle\ServerBundle\EventDispatcher,
     Symfony\Components\EventDispatcher\Event;
 
@@ -29,27 +28,25 @@ class HttpServer extends Server
     protected $servers;
 
     /**
-     * @param HttpDaemon $daemon
      * @param EventDispatcher $dispatcher
      * @param array $options (optional)
      *
      * @throws \InvalidArgumentException When unsupported option is provided
      */
-    public function __construct(HttpDaemon $daemon, EventDispatcher $dispatcher, array $options = array())
+    public function __construct(EventDispatcher $dispatcher, array $options = array())
     {
-        parent::__construct($daemon);
-
         $this->dispatcher = $dispatcher;
 
         $this->options = array(
-            'protocol'               => 'tcp',
-            'address'                => '*',
-            'port'                   => 1962,
-            'max_clients'            => 100,
-            'max_requests_per_child' => 1000,
-            'document_root'          => null,
-            'socket_client_class'    => 'Bundle\\ServerBundle\\Socket\\Http\\ClientSocket',
-            'socket_server_class'    => 'Bundle\\ServerBundle\\Socket\\Http\\ServerSocket',
+            'protocol'                   => 'tcp',
+            'address'                    => '*',
+            'port'                       => 1962,
+            'max_clients'                => 100,
+            'max_requests_per_child'     => 1000,
+            'document_root'              => null,
+            'socket_client_class'        => 'Bundle\\ServerBundle\\Socket\\Http\\ClientSocket',
+            'socket_server_class'        => 'Bundle\\ServerBundle\\Socket\\Http\\ServerSocket',
+            'socket_server_client_class' => 'Bundle\\ServerBundle\\Socket\\Http\\ServerClientSocket'
         );
 
         // check option names
@@ -108,7 +105,7 @@ class HttpServer extends Server
     protected function createServerSocket()
     {
         $class  = $this->options['socket_server_class'];
-        $server = new $class($this->options['protocol'], $this->options['address'], $this->options['port']);
+        $server = new $class($this->options['socket_server_client_class'], $this->options['protocol'], $this->options['address'], $this->options['port']);
         $id     = (integer) $server->getSocket();
 
         // store socket

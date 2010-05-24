@@ -26,8 +26,16 @@ abstract class Server implements ServerInterface
     /**
      * @param DaemonInterface $daemon
      */
-    public function __construct(DaemonInterface $daemon)
+    public function setDaemon(DaemonInterface $daemon)
     {
         $this->daemon = $daemon;
+    }
+
+    /**
+     * @return DaemonInterface
+     */
+    public function getDaemon()
+    {
+        return $this->daemon;
     }
 }

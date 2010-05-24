@@ -35,6 +35,7 @@ class HttpDaemon extends Daemon
         parent::__construct($pidFile, $user, $group, $umask);
 
         $this->server = $server;
+        $this->server->setDaemon($this);
 
         declare(ticks = 1);
 
