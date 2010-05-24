@@ -21,7 +21,13 @@ use Symfony\Components\EventDispatcher\EventDispatcher,
  */
 interface FilterInterface
 {
+    /**
+     * @param EventDispatcher $dispatcher
+     */
     public function register(EventDispatcher $dispatcher);
 
+    /**
+     * @param Event $event
+     */
     public function filter(Event $event);
 }
