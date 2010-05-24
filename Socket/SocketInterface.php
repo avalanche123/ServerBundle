@@ -13,7 +13,7 @@ namespace Bundle\ServerBundle\Socket;
 
 /**
  * @package    ServerBundle
- * @subpackage Handler
+ * @subpackage Socket
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
 interface SocketInterface

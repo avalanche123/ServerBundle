@@ -15,7 +15,7 @@ use Bundle\ServerBundle\Socket\HttpSocket;
 
 /**
  * @package    ServerBundle
- * @subpackage Handler
+ * @subpackage Socket
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
 class ServerSocket extends HttpSocket
@@ -37,6 +37,8 @@ class ServerSocket extends HttpSocket
 
     /**
      * @return boolean
+     *
+     * @throws \Exception If socket cannot be created
      */
     public function connect()
     {
@@ -55,6 +57,8 @@ class ServerSocket extends HttpSocket
 
     /**
      * @return Bundle\ServerBundle\Socket\Http\ClientSocket
+     *
+     * @throws \Exception If socket cannot be accepted
      */
     public function accept()
     {

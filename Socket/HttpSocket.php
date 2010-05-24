@@ -15,7 +15,7 @@ use Bundle\ServerBundle\Socket\Socket;
 
 /**
  * @package    ServerBundle
- * @subpackage Handler
+ * @subpackage Socket
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
 abstract class HttpSocket extends Socket

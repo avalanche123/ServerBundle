@@ -15,7 +15,7 @@ use Bundle\ServerBundle\Socket\HttpSocket;
 
 /**
  * @package    ServerBundle
- * @subpackage Handler
+ * @subpackage Socket
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
 class ClientSocket extends HttpSocket
@@ -24,6 +24,8 @@ class ClientSocket extends HttpSocket
 
     /**
      * @return boolean
+     *
+     * @throws \Exception If socket cannot be created
      */
     public function connect()
     {
@@ -44,7 +46,7 @@ class ClientSocket extends HttpSocket
     }
 
     /**
-     * @return HttpMessage
+     * @return boolean|HttpMessage
      */
     public function doRead()
     {
@@ -69,12 +71,15 @@ class ClientSocket extends HttpSocket
 
     /**
      * @param HttpMessage $message
+     * @return integer
      */
     public function doWrite(HttpMessage $message)
     {
         return $this->write($message->toString());
     }
 
+    /**
+     */
     public function timer()
     {
         // keep alive check

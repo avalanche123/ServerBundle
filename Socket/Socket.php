@@ -15,7 +15,7 @@ use Bundle\ServerBundle\Socket\SocketInterface;
 
 /**
  * @package    ServerBundle
- * @subpackage Handler
+ * @subpackage Socket
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
 abstract class Socket implements SocketInterface
