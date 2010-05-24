@@ -38,10 +38,6 @@ class ServerExtension extends LoaderExtension
         $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
         $configuration->merge($loader->load($this->resources['daemon']));
 
-        if (isset($config['class'])) {
-            $configuration->setParameter('daemon.class', $config['class']);
-        }
-
         if (isset($config['pid_file'])) {
             $configuration->setParameter('daemon.pid_file', $config['pid_file']);
         }
@@ -52,6 +48,10 @@ class ServerExtension extends LoaderExtension
 
         if (isset($config['group'])) {
             $configuration->setParameter('daemon.group', $config['group']);
+        }
+
+        if (isset($config['umask'])) {
+            $configuration->setParameter('daemon.umask', $config['umask']);
         }
 
         return $configuration;
@@ -68,8 +68,8 @@ class ServerExtension extends LoaderExtension
         $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
         $configuration->merge($loader->load($this->resources['server']));
 
-        if (isset($config['class'])) {
-            $configuration->setParameter('server.class', $config['class']);
+        if (isset($config['protocol'])) {
+            $configuration->setParameter('server.protocol', $config['protocol']);
         }
 
         if (isset($config['address'])) {
@@ -80,12 +80,20 @@ class ServerExtension extends LoaderExtension
             $configuration->setParameter('server.port', $config['port']);
         }
 
+        if (isset($config['max_clients'])) {
+            $configuration->setParameter('server.max_clients');
+        }
+
         if (isset($config['max_requests_per_child'])) {
             $configuration->setParameter('server.max_requests_per_child', $config['max_requests_per_child']);
         }
 
         if (isset($config['document_root'])) {
             $configuration->setParameter('server.document_root', $config['document_root']);
+        }
+
+        if (isset($config['compression'])) {
+            $configuration->setParameter('server.compression', $config['compression']);
         }
 
         return $configuration;

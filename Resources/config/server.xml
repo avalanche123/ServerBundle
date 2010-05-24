@@ -4,18 +4,81 @@
   xsi:schemaLocation="http://www.symfony-project.org/schema/dic/services http://www.symfony-project.org/schema/dic/services/services-1.0.xsd">
 
   <parameters>
-    <parameter key="server.class">Bundle\ServerBundle\Server</parameter>
+    <!-- Services -->
+    <parameter key="server.http.class">Bundle\ServerBundle\Server\HttpServer</parameter>
+    <parameter key="server.event_dispatcher.class">Bundle\ServerBundle\EventDispatcher</parameter>
+
+    <!-- Configuration -->
+    <parameter key="server.protocol">tcp</parameter>
     <parameter key="server.address">*</parameter>
     <parameter key="server.port">1962</parameter>
     <parameter key="server.max_clients">100</parameter>
     <parameter key="server.max_requests_per_child">1000</parameter>
     <parameter key="server.document_root">%kernel.root_dir%/../web</parameter>
+    <parameter key="server.compression" type="constant">false</parameter>
+
+    <!-- (Request) Handlers -->
+    <parameter key="file_handler.class">Bundle\ServerBundle\Handler\Http\FileHandler</parameter>
+    <parameter key="directory_handler.class">Bundle\ServerBundle\Handler\Http\DirectoryHandler</parameter>
+    <parameter key="symfony_handler.class">Bundle\ServerBundle\Handler\Http\SymfonyHandler</parameter>
+    <parameter key="error_handler.class">Bundle\ServerBundle\Handler\Http\ErrorHandler</parameter>
+
+    <!-- (Response) Filters -->
+    <parameter key="compression_filter.class">Bundle\ServerBundle\Filter\Http\CompressionFilter</parameter>
+    <parameter key="statistics_filter.class">Bundle\ServerBundle\Filter\Http\StatisticsFilter</parameter>
   </parameters>
 
   <services>
-    <service id="server" class="%server.class%">
+    <!-- (Request) Handlers -->
+    <service id="file_handler" class="%file_handler.class%">
+        <annotation name="server.handler" />
+        <argument type="string">%server.document_root%</argument>
+    </service>
+
+    <service id="directory_handler" class="%directory_handler.class%">
+        <annotation name="server.handler" />
+        <argument type="string">%server.document_root%</argument>
+    </service>
+
+    <service id="symfony_handler" class="%symfony_handler.class%">
+        <annotation name="server.handler" />
+        <argument type="service" id="kernel" />
+    </service>
+
+    <service id="error_handler" class="%error_handler.class%">
+        <annotation name="server.handler" />
+    </service>
+
+    <!-- (Response) Filters -->
+    <service id="compression_filter" class="%compression_filter.class%">
+        <annotation name="server.filter" />
+        <argument>%server.compression%</argument>
+    </service>
+
+    <service id="statistics_filter" class="%statistics_filter.class%">
+        <annotation name="server.filter" />
+    </service>
+
+    <!-- Services -->
+    <service id="server.event_dispatcher" class="%server.event_dispatcher.class%">
       <argument type="service" id="service_container" />
     </service>
-  </services>
 
+    <service id="server.http" class="%server.http.class%" shared="false">
+      <argument type="service" id="server.event_dispatcher" />
+      <argument type="collection">
+        <argument key="protocol">%server.protocol%</argument>
+        <argument key="address">%server.address%</argument>
+        <argument key="port">%server.port%</argument>
+        <argument key="max_clients">%server.max_clients%</argument>
+        <argument key="max_requests_per_child">%server.max_requests_per_child%</argument>
+        <argument key="document_root">%server.document_root%</argument>
+        <argument key="socket_client_class">Bundle\ServerBundle\Socket\Http\ClientSocket</argument>
+        <argument key="socket_server_class">Bundle\ServerBundle\Socket\Http\ServerSocket</argument>
+        <argument key="socket_server_client_class">Bundle\ServerBundle\Socket\Http\ServerClientSocket</argument>
+      </argument>
+    </service>
+
+    <service id="server" alias="server.http" />
+  </services>
 </container>
