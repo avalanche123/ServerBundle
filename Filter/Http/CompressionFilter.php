@@ -43,9 +43,20 @@ class CompressionFilter extends HttpFilter
 
     /**
      * @param Event $event
+     * @param mixed $value
+     * @return mixed
+     *
+     * @see EventDispatcher::filter()
      */
-    public function filter(Event $event)
+    public function filter(Event $event, $value)
     {
+        if (!$value instanceof \HttpMessage)
+        {
+            return $value;
+        }
+
+        return $value;
+
         // parse headers, check which compression is available
 
         // determine best (deflate > gzip) for available compressions
@@ -64,6 +75,7 @@ class CompressionFilter extends HttpFilter
      */
     protected function deflate($data)
     {
+      return gzdeflate($data, 9);
     }
 
     /**
@@ -72,5 +84,6 @@ class CompressionFilter extends HttpFilter
      */
     protected function gzip($data)
     {
+      return gzcompress($data, 9);
     }
 }

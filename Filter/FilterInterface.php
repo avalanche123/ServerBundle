@@ -28,6 +28,8 @@ interface FilterInterface
 
     /**
      * @param Event $event
+     * @param mixed $value
+     * @return mixed
      */
-    function filter(Event $event);
+    function filter(Event $event, $value);
 }

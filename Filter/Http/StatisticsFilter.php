@@ -33,9 +33,20 @@ class StatisticsFilter extends HttpFilter
 
     /**
      * @param Event $event
+     * @param mixed $value
+     * @return mixed
+     *
+     * @see EventDispatcher::filter()
      */
-    public function filter(Event $event)
+    public function filter(Event $event, $value)
     {
+        if (!$value instanceof \HttpMessage)
+        {
+            return $value;
+        }
+
+        return $value;
+
         // collect statistics about the response, because it will be send ...
         // ... after that filter immediately. Dunno where to store that stats!
 
