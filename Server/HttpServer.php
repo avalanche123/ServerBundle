@@ -152,7 +152,7 @@ class HttpServer extends Server
                             $response = $event->getReturnValue();
 
                             // filter response
-                            $event = $this->dispatcher->filter(new Event($request, 'server.response', $response));
+                            $event = $this->dispatcher->filter(new Event($request, 'server.response'), $response);
 
                             // get response
                             $response = $event->getReturnValue();
@@ -160,7 +160,12 @@ class HttpServer extends Server
                             // @TODO add response checks?
 
                             // send response
-                            $client->sendResponse($response);
+                            try {
+                                $client->sendResponse($response);
+                            } catch (\Exception $e) {
+                                // @TODO what to do if it 's not processed?
+                                //       print an error 404 page, i think :)
+                            }
                         } else {
                             // @TODO what to do if it 's not processed?
                             //       print an error 404 page, i think :)
@@ -180,7 +185,12 @@ class HttpServer extends Server
                         }
 
                         // try sending response, again
-                        $client->sendResponse();
+                        try {
+                            $client->sendResponse();
+                        } catch (\Exception $e) {
+                            // @TODO what to do if it 's not processed?
+                            //       print an error 404 page, i think :)
+                        }
 
                         // @TODO is that correct, here?
                         $requests++;
@@ -275,6 +285,12 @@ class HttpServer extends Server
         return $server;
     }
 
+    /**
+     * @param resource $socket
+     * @return boolean
+     *
+     * @throws \Exception If socket is not a valid resource
+     */
     protected function isClientSocket($socket)
     {
         if (!is_resource($socket)) {
@@ -288,6 +304,12 @@ class HttpServer extends Server
         return false;
     }
 
+    /**
+     * @param resource $socket
+     * @return boolean
+     *
+     * @throws \Exception If socket is not a valid resource
+     */
     protected function isServerSocket($socket)
     {
         if (!is_resource($socket)) {
