@@ -138,37 +138,35 @@ class HttpServer extends Server
                     }
 
                     if ($this->isClientSocket($socket)) {
-                        $client  = $this->findSocket($socket);
+                        $client = $this->findSocket($socket);
 
                         /** @var $request \HttpMessage */
                         $request = $client->readRequest();
 
-                        // dispatch request
+                        if (!$request instanceof \HttpMessage) {
+                            // @TODO disconnect client?
+                            continue;
+                        }
+
+                        // handle request
                         $event = $this->dispatcher->notifyUntil(new Event($request, 'server.request'));
 
-                        // request processed
                         if ($event->isProcessed()) {
-                              /** @var $response \HttpMessage */
+                            /** @var $response \HttpMessage */
                             $response = $event->getReturnValue();
 
                             // filter response
                             $event = $this->dispatcher->filter(new Event($request, 'server.response'), $response);
 
-                            // get response
+                            /** @var $response \HttpMessage */
                             $response = $event->getReturnValue();
 
                             // @TODO add response checks?
 
-                            // send response
-                            try {
-                                $client->sendResponse($response);
-                            } catch (\Exception $e) {
-                                // @TODO what to do if it 's not processed?
-                                //       print an error 404 page, i think :)
-                            }
+                            $client->sendResponse($response);
                         } else {
                             // @TODO what to do if it 's not processed?
-                            //       print an error 404 page, i think :)
+                            //       actually this should never happen.
                         }
 
                         // @TODO is that correct, here?
@@ -184,13 +182,8 @@ class HttpServer extends Server
                             $client->connect();
                         }
 
-                        // try sending response, again
-                        try {
-                            $client->sendResponse();
-                        } catch (\Exception $e) {
-                            // @TODO what to do if it 's not processed?
-                            //       print an error 404 page, i think :)
-                        }
+                        // send response
+                        $client->sendResponse();
 
                         // @TODO is that correct, here?
                         $requests++;

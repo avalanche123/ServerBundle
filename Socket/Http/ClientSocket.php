@@ -90,8 +90,13 @@ class ClientSocket extends HttpSocket
             throw new \Exception('No response to send');
         }
 
+        $message = $this->response;
+
+        $this->request  = null;
+        $this->response = null;
+
         // write to socket
-        $this->doWrite($this->response);
+        return $this->doWrite($message);
     }
 
     /**
@@ -108,6 +113,7 @@ class ClientSocket extends HttpSocket
     protected function doRead()
     {
         $data = $this->read();
+        $data = trim($data);
 
         if (empty($data)) {
             return false;

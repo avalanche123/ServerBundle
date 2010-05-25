@@ -27,6 +27,7 @@ use Symfony\Components\HttpKernel\HttpKernelInterface,
 class SymfonyHandler extends HttpHandler
 {
     protected $kernel;
+    protected $customKernel;
     protected $options;
 
     /**
@@ -34,13 +35,16 @@ class SymfonyHandler extends HttpHandler
      */
     public function __construct(HttpKernelInterface $kernel, array $options)
     {
-        $this->kernel  = $kernel;
+        $this->kernel       = $kernel;
+        $this->customKernel = null;
 
         $this->options = array(
-            'protocol'      => 'tcp',
-            'address'       => '127.0.0.1',
-            'port'          => 1962,
-            'document_root' => $this->kernel->getRootDir().'/../web'
+            'kernel_environment' => 'dev',
+            'kernel_debug'       => true,
+            'protocol'           => 'tcp',
+            'address'            => '127.0.0.1',
+            'port'               => 1962,
+            'document_root'      => $this->kernel->getRootDir().'/../web'
         );
 
         // check option names
@@ -49,6 +53,13 @@ class SymfonyHandler extends HttpHandler
         }
 
         $this->options = array_merge($this->options, $options);
+
+        // start a custom kernel if needed
+        /* if ($this->options['kernel_environment'] != $this->kernel->getEnvironment() ||
+            $this->options['kernel_debug'] != $this->kernel->isDebug()) {
+            $class = get_class($kernel);
+            $this->customKernel = new $class($this->options['kernel_environment'], $this->options['kernel_debug']);
+        } */
     }
 
     /**
@@ -96,15 +107,44 @@ class SymfonyHandler extends HttpHandler
         // initialize HttpKernel\Request
         $sfRequest = Request::create($requestUrl, $requestMethod, $parameters, $cookies, $files, $server);
 
-        // @TODO: maybe we should create & boot a brand new kernel, with a
-        //        provided environment (see server:start -e) and w/o debug mode
-        //        instead of using our "context" kernel?
+        try
+        {
+            // @TODO does not work. cannot redeclare helloProjectContainer
+            //       this really sucks: Symfony\Foundation\Kernel.php#L257
+            // if (null !== $this->customKernel) {
+            //     $sfResponse = $this->customKernel->handle($sfRequest);
+            // } else {
+            //     $sfResponse = $this->kernel->handle($sfRequest);
+            // }
 
-        // handle request (main, raw)
-        try {
-            $sfResponse = $this->kernel->handle($sfRequest, HttpKernelInterface::MASTER_REQUEST, true);
+            // handle request (main, raw)
+            $sfResponse = $this->kernel->handle($sfRequest);
         } catch (\Exception $e) {
-            return false;
+            $code    = 500;
+            $status  = Response::$statusTexts[$code];
+            $headers = array();
+            $content = sprintf('<h1>Error %d - %s</h1>', $code, $status);
+            // ExceptionController-like view renderer would be cool
+
+            // add Date header
+            $date = new \DateTime();
+            $headers['Date'] = $date->format(DATE_RFC822);
+
+            // add Content-Length header
+            $headers['Content-Length'] = strlen($content);
+
+            // build HttpMessage response
+            $response = new \HttpMessage();
+            $response->setHttpVersion($request->getHttpVersion());
+            $response->setType(HTTP_MSG_RESPONSE);
+            $response->setResponseCode($code);
+            $response->setResponseStatus($status);
+            $response->addHeaders($headers);
+            $response->setBody($content);
+
+            $event->setReturnValue($response);
+
+            return true;
         }
 
         // add Date header
