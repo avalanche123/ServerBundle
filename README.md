@@ -3,15 +3,16 @@ README
 
 This is a Mongrel/WEBrick inspired HTTP webserver for Symfony 2.
 
-> **BEWARE:** this Bundle is far away from beeing usable. Right now (after some
-> necessary refactoring) there's actually no real logic to handle requests or
-> send responses. This code is still **work in progress** and must be
-> implemented -- and that's some kind of a strange experiment.
-
 The goal is to implement the cool and just missing features that Mongrel/WEBrick
 do provide for RoR developers. If you're interested in making this Bundle usable
 for production, feel free to fork and improve it - I'd appreciate pull requests
 and helping hands.
+
+Right now it can deliver Symfony requests, static files, directory listings and
+errors (404, 500). Expect to get more features continuously as the hardest work
+is almost done.
+
+> **BEWARE:** Everything is **HIGHLY EXPERIMENTAL** - things **WILL** change!
 
 
 REQUIREMENTS
