@@ -28,6 +28,8 @@ interface HandlerInterface
 
     /**
      * @param Event $event
+     *
+     * @see EventDispatcher::notifyUntil()
      */
     function handle(Event $event);
 }

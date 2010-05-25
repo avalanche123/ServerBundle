@@ -43,6 +43,8 @@ class DirHandler extends HttpHandler
 
     /**
      * @param Event $event
+     *
+     * @see EventDispatcher::notifyUntil()
      */
     public function handle(Event $event)
     {

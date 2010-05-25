@@ -2,7 +2,7 @@
 
 namespace Bundle\ServerBundle\Handler\Http;
 
-use Symfony\Components\HttpKernel\KernelInterface,
+use Symfony\Components\HttpKernel\HttpKernelInterface,
     Symfony\Components\EventDispatcher\EventDispatcher,
     Symfony\Components\EventDispatcher\Event,
     Bundle\ServerBundle\Handler\HttpHandler;
@@ -28,7 +28,7 @@ class SymfonyHandler extends HttpHandler
     /**
      * @param KernelInterface $kernel
      */
-    public function __construct(KernelInterface $kernel)
+    public function __construct(HttpKernelInterface $kernel)
     {
         $this->kernel = $kernel;
     }
@@ -43,9 +43,14 @@ class SymfonyHandler extends HttpHandler
 
     /**
      * @param Event $event
+     *
+     * @see EventDispatcher::notifyUntil()
      */
     public function handle(Event $event)
     {
+        // maybe we should create & boot a brand new kernel, with a provided ...
+        // ... environment (see server:start -e) and w/o debug mode?
+
         // boot kernel?
         // if (!$kernel->isBooted()) {
         //     $kernel->boot();
