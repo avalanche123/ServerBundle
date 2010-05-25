@@ -19,7 +19,7 @@
 
     <!-- (Request) Handlers -->
     <parameter key="file_handler.class">Bundle\ServerBundle\Handler\Http\FileHandler</parameter>
-    <parameter key="directory_handler.class">Bundle\ServerBundle\Handler\Http\DirectoryHandler</parameter>
+    <parameter key="dir_handler.class">Bundle\ServerBundle\Handler\Http\DirHandler</parameter>
     <parameter key="symfony_handler.class">Bundle\ServerBundle\Handler\Http\SymfonyHandler</parameter>
     <parameter key="error_handler.class">Bundle\ServerBundle\Handler\Http\ErrorHandler</parameter>
 
@@ -35,7 +35,7 @@
         <argument type="string">%server.document_root%</argument>
     </service>
 
-    <service id="directory_handler" class="%directory_handler.class%">
+    <service id="dir_handler" class="%dir_handler.class%">
         <annotation name="server.handler" />
         <argument type="string">%server.document_root%</argument>
     </service>
