@@ -43,6 +43,12 @@
     <service id="symfony_handler" class="%symfony_handler.class%">
         <annotation name="server.handler" />
         <argument type="service" id="kernel" />
+        <argument type="collection">
+          <argument key="protocol">%server.protocol%</argument>
+          <argument key="address">%server.address%</argument>
+          <argument key="port">%server.port%</argument>
+          <argument key="document_root">%server.document_root%</argument>
+        </argument>
     </service>
 
     <service id="error_handler" class="%error_handler.class%">
