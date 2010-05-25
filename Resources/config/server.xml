@@ -18,7 +18,6 @@
     <parameter key="server.compression" type="constant">false</parameter>
 
     <!-- (Request) Handlers -->
-    <parameter key="file_handler.class">Bundle\ServerBundle\Handler\Http\FileHandler</parameter>
     <parameter key="dir_handler.class">Bundle\ServerBundle\Handler\Http\DirHandler</parameter>
     <parameter key="symfony_handler.class">Bundle\ServerBundle\Handler\Http\SymfonyHandler</parameter>
     <parameter key="error404_handler.class">Bundle\ServerBundle\Handler\Http\Error404Handler</parameter>
@@ -30,11 +29,6 @@
 
   <services>
     <!-- (Request) Handlers -->
-    <service id="file_handler" class="%file_handler.class%">
-        <annotation name="server.handler" />
-        <argument type="string">%server.document_root%</argument>
-    </service>
-
     <service id="dir_handler" class="%dir_handler.class%">
         <annotation name="server.handler" />
         <argument type="string">%server.document_root%</argument>
@@ -44,6 +38,8 @@
         <annotation name="server.handler" />
         <argument type="service" id="kernel" />
         <argument type="collection">
+          <argument key="kernel_environment">%server.kernel_environment%</argument>
+          <argument key="kernel_debug">%server.kernel_debug%</argument>
           <argument key="protocol">%server.protocol%</argument>
           <argument key="address">%server.address%</argument>
           <argument key="port">%server.port%</argument>

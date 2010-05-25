@@ -68,6 +68,18 @@ class ServerExtension extends LoaderExtension
         $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
         $configuration->merge($loader->load($this->resources['server']));
 
+        if (isset($config['environment'])) {
+            $configuration->setParameter('server.kernel_environment', $config['environment']);
+        } else {
+            $configuration->setParameter('server.kernel_environment', $conhfiguration->getParameter('kernel.environment'));
+        }
+
+        if (isset($config['debug'])) {
+            $configuration->setParameter('server.kernel_debug', $config['debug']);
+        } else {
+            $configuration->setParameter('server.kernel_debug', $conhfiguration->getParameter('kernel.debug'));
+        }
+
         if (isset($config['protocol'])) {
             $configuration->setParameter('server.protocol', $config['protocol']);
         }
