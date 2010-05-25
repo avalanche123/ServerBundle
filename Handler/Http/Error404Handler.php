@@ -20,7 +20,7 @@ use Symfony\Components\EventDispatcher\EventDispatcher,
  * @subpackage Handler
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-class ErrorHandler extends HttpHandler
+class Error404Handler extends HttpHandler
 {
     /**
      * @param EventDispatcher $dispatcher
@@ -37,11 +37,33 @@ class ErrorHandler extends HttpHandler
      */
     public function handle(Event $event)
     {
+        // get HttpMessage request
+        $request = $event->getSubject();
+
+        $code    = 404;
+        $status  = 'Not Found';
+        $headers = array();
+        $content = '<h1>Error 404 - Not Found</h1>';
         // ExceptionController-like view renderer would be cool
 
-        // determine error source, set headers (e.g. 404, 500) etc ...
+        // add Date header
+        $date = new \DateTime();
+        $headers['Date'] = $date->format(DATE_RFC822);
 
-        // @TODO must be clarified how the dispatching of the event works
-        // return $event / $error / whatever
+        // add Content-Length header
+        $headers['Content-Length'] = strlen($content);
+
+        // build HttpMessage response
+        $response = new \HttpMessage();
+        $response->setHttpVersion($request->getHttpVersion());
+        $response->setType(HTTP_MSG_RESPONSE);
+        $response->setResponseCode($code);
+        $response->setResponseStatus($status);
+        $response->addHeaders($headers);
+        $response->setBody($content);
+
+        $event->setReturnValue($response);
+
+        return true;
     }
 }

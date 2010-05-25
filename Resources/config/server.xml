@@ -21,7 +21,7 @@
     <parameter key="file_handler.class">Bundle\ServerBundle\Handler\Http\FileHandler</parameter>
     <parameter key="dir_handler.class">Bundle\ServerBundle\Handler\Http\DirHandler</parameter>
     <parameter key="symfony_handler.class">Bundle\ServerBundle\Handler\Http\SymfonyHandler</parameter>
-    <parameter key="error_handler.class">Bundle\ServerBundle\Handler\Http\ErrorHandler</parameter>
+    <parameter key="error404_handler.class">Bundle\ServerBundle\Handler\Http\Error404Handler</parameter>
 
     <!-- (Response) Filters -->
     <parameter key="compression_filter.class">Bundle\ServerBundle\Filter\Http\CompressionFilter</parameter>
@@ -51,7 +51,7 @@
         </argument>
     </service>
 
-    <service id="error_handler" class="%error_handler.class%">
+    <service id="error404_handler" class="%error404_handler.class%">
         <annotation name="server.handler" />
     </service>
 
