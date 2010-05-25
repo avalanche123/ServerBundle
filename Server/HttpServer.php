@@ -122,7 +122,7 @@ class HttpServer extends Server
 
         while (
             !$this->shutdown &&                                             // daemon stop?
-            $requests < $this->options['max_requests_per_child'] &&         // max requests?
+            !$this->reachedMaxRequestsPerChild($requests) &&                // max requests?
             false !== ($events = @stream_select($read, $write, $except, 0)) // socket alive?
         ) {
             if ($events > 0) {
@@ -246,6 +246,19 @@ class HttpServer extends Server
     public function shutdown()
     {
         $this->shutdown = true;
+    }
+
+    /**
+     * @param integer $currently
+     * @return boolean
+     */
+    protected function reachedMaxRequestsPerChild($currently)
+    {
+      if ($this->options['max_requests_per_child'] > 0) {
+          return $currently < $this->options['max_requests_per_child'];
+      }
+
+      return false;
     }
 
     /**
