@@ -27,12 +27,12 @@ class EventDispatcher extends BaseEventDispatcher
     public function __construct(ContainerInterface $container)
     {
         // register request handlers
-        foreach ($container->findAnnotatedServiceIds('server.request') as $id => $attributes) {
+        foreach ($container->findAnnotatedServiceIds('server.handler') as $id => $attributes) {
             $container->getService($id)->register($this);
         }
 
         // register response filters
-        foreach ($container->findAnnotatedServiceIds('server.response') as $id => $attributes) {
+        foreach ($container->findAnnotatedServiceIds('server.filter') as $id => $attributes) {
             $container->getService($id)->register($this);
         }
     }
