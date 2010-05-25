@@ -101,7 +101,11 @@ class SymfonyHandler extends HttpHandler
         //        instead of using our "context" kernel?
 
         // handle request (main, raw)
-        $sfResponse = $this->kernel->handle($sfRequest, HttpKernelInterface::MASTER_REQUEST, true);
+        try {
+            $sfResponse = $this->kernel->handle($sfRequest, HttpKernelInterface::MASTER_REQUEST, true);
+        } catch (\Exception $e) {
+            return false;
+        }
 
         // add Date header
         $date = new \DateTime();
