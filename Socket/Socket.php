@@ -179,7 +179,7 @@ abstract class Socket implements SocketInterface
      */
     public function write($data)
     {
-        $send = frwite($this->socket, $data);
+        $send = fwrite($this->socket, $data);
 
         if ($send != strlen($data)) {
             $this->blocked = true;
