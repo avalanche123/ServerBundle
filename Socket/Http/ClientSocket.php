@@ -21,6 +21,8 @@ use Bundle\ServerBundle\Socket\HttpSocket;
 class ClientSocket extends HttpSocket
 {
     protected $accepted;
+    protected $request;
+    protected $response;
 
     /**
      * @return boolean
@@ -42,13 +44,68 @@ class ClientSocket extends HttpSocket
         // keep alive
         $this->accepted = time();
 
+        $this->request  = null;
+        $this->response = null;
+
         return true;
+    }
+
+    /**
+     * @return HttpMessage
+     *
+     * @TODO move ClientSocket::doRead() logic in here
+     */
+    public function readRequest()
+    {
+        if (null !== $this->request) {
+            return $this->request;
+        }
+
+        // read from socket
+        $this->request = $this->doRead();
+
+        return $this->request;
+    }
+
+    /**
+     * @return \HttpMessage
+     */
+    public function getRequest()
+    {
+        return $this->request;
+    }
+
+    /**
+     * @param HttpMessage $message
+     *
+     * @TODO move ClientSocket::doWrite() logic in here
+     */
+    public function sendResponse(\HttpMessage $message = null)
+    {
+        if (null !== $message) {
+            $this->response = $message;
+        }
+
+        if (null === $this->response) {
+            throw new \Exception('No response to send');
+        }
+
+        // write to socket
+        $this->doWrite($this->response);
+    }
+
+    /**
+     * @return \HttpMessage
+     */
+    public function getResponse()
+    {
+        return $this->response;
     }
 
     /**
      * @return boolean|HttpMessage
      */
-    public function doRead()
+    protected function doRead()
     {
         $data = $this->read();
 
@@ -57,7 +114,7 @@ class ClientSocket extends HttpSocket
         }
 
         // parse HTTP message
-        $message = new HttpMessage($data);
+        $message = new \HttpMessage($data);
 
         // skip on non-requests
         if ($message->getType() != HTTP_MSG_REQUEST) {
@@ -73,9 +130,26 @@ class ClientSocket extends HttpSocket
      * @param HttpMessage $message
      * @return integer
      */
-    public function doWrite(HttpMessage $message)
+    protected function doWrite(\HttpMessage $message)
     {
-        return $this->write($message->toString());
+        $buffer = sprintf("HTTP/%s %d %s\r\n",
+            $message->getHttpVersion(),
+            $message->getResponseCode(),
+            $message->getResponseStatus()
+        );
+
+        foreach ($message->getHeaders() as $header => $value) {
+            $buffer .= sprintf("%s: %s\r\n",
+                $header,
+                $value
+            );
+        }
+
+        $buffer .= "\r\n";
+        $buffer .= $message->getBody();
+        $buffer .= "\r\n";
+
+        return $this->write($buffer);
     }
 
     /**

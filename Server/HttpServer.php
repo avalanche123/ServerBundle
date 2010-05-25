@@ -140,28 +140,31 @@ class HttpServer extends Server
                     if ($this->isClientSocket($socket)) {
                         $client  = $this->findSocket($socket);
 
-                        // @TODO see the following lines
+                        /** @var $request \HttpMessage */
+                        $request = $client->readRequest();
 
-                        // something like this to notify the handlers, until ...
-                        // ... one handler returns a HttpMessage? Where do I ...
-                        // ... store the HttpMessage and how do I get into the ...
-                        // ... next round of this loop to be written? I think ...
-                        // ... I need write buffers in clients? :)
+                        // dispatch request
+                        $event = $this->dispatcher->notifyUntil(new Event($request, 'server.request'));
 
-                        /**
-                         * $message = new HttpMessage($data);
-                         * $version = $message->getHttpVersion();
-                         * $url     = $message->getRequestUrl();
-                         * $method  = $message->getRequestMethod();
-                         * $headers = $message->getHeaders();
-                         * $body    = $message->getBody();
-                         */
+                        // request processed
+                        if ($event->isProcessed()) {
+                              /** @var $response \HttpMessage */
+                            $response = $event->getReturnValue();
 
-                        // $message = $client->doRead(); // not ->read()!
+                            // filter response
+                            $event = $this->dispatcher->filter(new Event($request, 'server.response', $response));
 
-                        /* $this->dispatcher->notifyUntil(new Event($message, 'server.request', array(
-                            'socket' => $client
-                        ))); */
+                            // get response
+                            $response = $event->getReturnValue();
+
+                            // @TODO add response checks?
+
+                            // send response
+                            $client->sendResponse($response);
+                        } else {
+                            // @TODO what to do if it 's not processed?
+                            //       print an error 404 page, i think :)
+                        }
 
                         // @TODO is that correct, here?
                         $requests++;
@@ -176,28 +179,8 @@ class HttpServer extends Server
                             $client->connect();
                         }
 
-                        // @TODO see the following lines
-
-                        // something like this to filter the generated ...
-                        // ... HttpMessage which was generated and bufferd ...
-                        // ... by the previous $read round of this loop. I ...
-                        // ... think I really need write buffers in clients? ;O
-
-                        /**
-                         * $message = new HttpMessage();
-                         * $message->setType(HTTP_MSG_RESPONSE);
-                         * $message->setHttpVersion($version);
-                         * $message->setResponseCode($statusCode);
-                         * $message->setResponseStatus($statusMessage);
-                         * $message->setHeaders($headers);
-                         * $message->setBody($body);
-                         */
-
-                        /* $message = $this->dispatcher->filter(new Event($data, 'server.response', array(
-                            'socket' => $client
-                        ))) */
-
-                        // $client->doWrite($message); // not ->write()!
+                        // try sending response, again
+                        $client->sendResponse();
 
                         // @TODO is that correct, here?
                         $requests++;
