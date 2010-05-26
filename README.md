@@ -1,6 +1,8 @@
 README
 ======
 
+> **NOTE:** You may want to take a look into my [ServerSandbox][3].
+
 This is a Mongrel/WEBrick inspired HTTP webserver for Symfony 2.
 
 The goal is to implement the cool and just missing features that Mongrel/WEBrick
@@ -13,7 +15,6 @@ errors (404, 500). Expect to get more features continuously as the hardest work
 is almost done.
 
 > **BEWARE:** Everything is **HIGHLY EXPERIMENTAL** - things **WILL** change!
-
 
 REQUIREMENTS
 ------------
@@ -161,3 +162,4 @@ that was distributed with this source code.
 
 [1]: http://pecl.php.net/package/pecl_http
 [2]: http://symfony-reloaded.org/
+[3]: http://github.com/pminnieur/ServerSandbox
