@@ -30,12 +30,12 @@
   <services>
     <!-- (Request) Handlers -->
     <service id="dir_handler" class="%dir_handler.class%">
-        <annotation name="server.handler" />
+        <annotation name="server.listener" />
         <argument type="string">%server.document_root%</argument>
     </service>
 
     <service id="symfony_handler" class="%symfony_handler.class%">
-        <annotation name="server.handler" />
+        <annotation name="server.listener" />
         <argument type="service" id="kernel" />
         <argument type="collection">
           <argument key="kernel_environment">%server.kernel_environment%</argument>
@@ -48,17 +48,17 @@
     </service>
 
     <service id="error404_handler" class="%error404_handler.class%">
-        <annotation name="server.handler" />
+        <annotation name="server.listener" />
     </service>
 
     <!-- (Response) Filters -->
     <service id="compression_filter" class="%compression_filter.class%">
-        <annotation name="server.filter" />
+        <annotation name="server.listener" />
         <argument>%server.compression%</argument>
     </service>
 
     <service id="statistics_filter" class="%statistics_filter.class%">
-        <annotation name="server.filter" />
+        <annotation name="server.listener" />
     </service>
 
     <!-- Services -->
