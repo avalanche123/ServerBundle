@@ -3,6 +3,7 @@
 namespace Bundle\ServerBundle\DependencyInjection;
 
 use Symfony\Components\DependencyInjection\Loader\LoaderExtension,
+    Symfony\Components\DependencyInjection\ContainerInterface,
     Symfony\Components\DependencyInjection\Loader\XmlFileLoader,
     Symfony\Components\DependencyInjection\BuilderConfiguration;
 
@@ -22,10 +23,20 @@ use Symfony\Components\DependencyInjection\Loader\LoaderExtension,
  */
 class ServerExtension extends LoaderExtension
 {
+    protected $container;
     protected $resources = array(
         'daemon' => 'daemon.xml',
         'server' => 'server.xml'
     );
+
+    /**
+     *
+     * @param ContainerInterface $container
+     */
+    public function __construct(ContainerInterface $container)
+    {
+        $this->container = $container;
+    }
 
     /**
      * @param array $config
@@ -70,14 +81,24 @@ class ServerExtension extends LoaderExtension
 
         if (isset($config['environment'])) {
             $configuration->setParameter('server.kernel_environment', $config['environment']);
+
+            // fixes class redeclaration error on custom kernel environment
+            if ($config['environment'] != $this->container->getParameter('kernel.environment')) {
+                $configuration->setParameter('kernel.include_core_classes', false);
+            }
         } else {
-            $configuration->setParameter('server.kernel_environment', $configuration->getParameter('kernel.environment'));
+            $configuration->setParameter('server.kernel_environment', $this->container->getParameter('kernel.environment'));
         }
 
         if (isset($config['debug'])) {
             $configuration->setParameter('server.kernel_debug', $config['debug']);
+
+            // fixes class redeclaration error on custom kernel debug mode
+            if ($config['debug'] != $this->container->getParameter('kernel.debug')) {
+                $configuration->setParameter('kernel.include_core_classes', false);
+            }
         } else {
-            $configuration->setParameter('server.kernel_debug', $configuration->getParameter('kernel.debug'));
+            $configuration->setParameter('server.kernel_debug', $this->container->getParameter('kernel.debug'));
         }
 
         if (isset($config['protocol'])) {

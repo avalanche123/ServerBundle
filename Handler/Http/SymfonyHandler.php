@@ -55,11 +55,12 @@ class SymfonyHandler extends HttpHandler
         $this->options = array_merge($this->options, $options);
 
         // start a custom kernel if needed
-        /* if ($this->options['kernel_environment'] != $this->kernel->getEnvironment() ||
+        if ($this->options['kernel_environment'] != $this->kernel->getEnvironment() ||
             $this->options['kernel_debug'] != $this->kernel->isDebug()) {
             $class = get_class($kernel);
             $this->customKernel = new $class($this->options['kernel_environment'], $this->options['kernel_debug']);
-        } */
+            $this->customKernel->boot();
+        }
     }
 
     /**
@@ -109,19 +110,13 @@ class SymfonyHandler extends HttpHandler
 
         try
         {
-            // @TODO does not work. Process hangs while booting the custom
-            //       kernel. Just need some more informations about this.
-            /* if (null !== $this->customKernel) {
-                if (!$this->customKernel->isBooted()) {
-                    $this->customKernel->boot();
-                }
-
+            if (null !== $this->customKernel) {
                 $sfResponse = $this->customKernel->handle($sfRequest);
             } else {
                 $sfResponse = $this->kernel->handle($sfRequest);
-            } */
+            }
 
-            $sfResponse = $this->kernel->handle($sfRequest);
+            // $sfResponse = $this->kernel->handle($sfRequest);
         } catch (\Exception $e) {
             $code    = 500;
             $status  = Response::$statusTexts[$code];
