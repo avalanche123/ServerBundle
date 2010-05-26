@@ -115,8 +115,6 @@ class SymfonyHandler extends HttpHandler
             } else {
                 $sfResponse = $this->kernel->handle($sfRequest);
             }
-
-            // $sfResponse = $this->kernel->handle($sfRequest);
         } catch (\Exception $e) {
             $code    = 500;
             $status  = Response::$statusTexts[$code];
