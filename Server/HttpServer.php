@@ -254,11 +254,11 @@ class HttpServer extends Server
      */
     protected function reachedMaxRequestsPerChild($currently)
     {
-      if ($this->options['max_requests_per_child'] > 0) {
-          return $currently >= $this->options['max_requests_per_child'];
-      }
+        if ($this->options['max_requests_per_child'] > 0) {
+            return $currently >= $this->options['max_requests_per_child'];
+        }
 
-      return false;
+        return false;
     }
 
     /**
