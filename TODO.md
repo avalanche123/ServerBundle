@@ -7,6 +7,13 @@ TODO
  * write PHPUnit tests
 
 
+pecl_http
+---------
+ * make pecl_http optional and re-implement HttpMessage functionality
+ * create a Request and Response class around HttpMessage
+ * move Request/Response creation from Handlers/Filters/Socket to HttpServer
+
+
 Command
 -------
  * implement mongrel_rails like options (work in progress)
@@ -53,15 +60,22 @@ Server
  * add interprocess communication (IPC)
  * add process forking (spawn children) and management (work in progress)
  * check multi-threading in child processes
- * separate dispatching into its own classes (symfony, static file, error) (work in progress)
+ * separate dispatching into its own classes (symfony, static file, error) (work in progress, almost finished)
  * improve dispatching logic to be more granular and user friendly
+
+
+Socket
+------
+ * improve API
+ * check class functionality and usage
+ * check stream_socket_* usage
 
 
 Symfony
 -------
- * start Symfony in provided environment (in child processes / threads)
- * improve $_SERVER emulation
+ * start Symfony in provided environment (in child processes / threads) (work in progress, almost finished)
+ * improve $_SERVER emulation (work in progress)
  * implement $_GET, $_POST, $_COOKIE and $_FILES emulation
  * check if $_REQUEST, $_SESSION and $_ENV superglobals must be "emulated"
- * improve Request, Kernel and Response usage (and the rest of Symfony, too) ;)
+ * improve Request, Kernel and Response usage (and the rest of Symfony, too) (work in progress)
  * add more headers
