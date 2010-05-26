@@ -109,15 +109,18 @@ class SymfonyHandler extends HttpHandler
 
         try
         {
-            // @TODO does not work. cannot redeclare helloProjectContainer
-            //       this really sucks: Symfony\Foundation\Kernel.php#L257
-            // if (null !== $this->customKernel) {
-            //     $sfResponse = $this->customKernel->handle($sfRequest);
-            // } else {
-            //     $sfResponse = $this->kernel->handle($sfRequest);
-            // }
+            // @TODO does not work. Process hangs while booting the custom
+            //       kernel. Just need some more informations about this.
+            /* if (null !== $this->customKernel) {
+                if (!$this->customKernel->isBooted()) {
+                    $this->customKernel->boot();
+                }
 
-            // handle request (main, raw)
+                $sfResponse = $this->customKernel->handle($sfRequest);
+            } else {
+                $sfResponse = $this->kernel->handle($sfRequest);
+            } */
+
             $sfResponse = $this->kernel->handle($sfRequest);
         } catch (\Exception $e) {
             $code    = 500;
