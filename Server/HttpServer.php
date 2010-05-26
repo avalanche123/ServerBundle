@@ -120,6 +120,11 @@ class HttpServer extends Server
         // max requests
         $requests = 0;
 
+        // disable max_requests_per_child in non-daemon mode
+        if (null === $this->getDaemon() || !$this->getDaemon()->isChild()) {
+            $this->options['max_requests_per_child'] = 0;
+        }
+
         while (
             !$this->shutdown &&                                             // daemon stop?
             !$this->reachedMaxRequestsPerChild($requests) &&                // max requests?
@@ -249,16 +254,16 @@ class HttpServer extends Server
     }
 
     /**
-     * @param integer $currently
+     * @param integer $requests
      * @return boolean
      */
-    protected function reachedMaxRequestsPerChild($currently)
+    protected function reachedMaxRequestsPerChild($requests)
     {
-        if ($this->options['max_requests_per_child'] > 0) {
-            return $currently >= $this->options['max_requests_per_child'];
+        if (!$this->options['max_requests_per_child']) {
+            return false;
         }
 
-        return false;
+        return $requests >= $this->options['max_requests_per_child'];
     }
 
     /**
