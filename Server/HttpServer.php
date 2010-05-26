@@ -213,7 +213,7 @@ class HttpServer extends Server
                 $timer = time();
             }
 
-            $rem = $this->cleanSockets();
+            $this->cleanSockets();
 
             // override select sets
             $read   = $this->createReadSet();
@@ -255,7 +255,7 @@ class HttpServer extends Server
     protected function reachedMaxRequestsPerChild($currently)
     {
       if ($this->options['max_requests_per_child'] > 0) {
-          return $currently < $this->options['max_requests_per_child'];
+          return $currently >= $this->options['max_requests_per_child'];
       }
 
       return false;
