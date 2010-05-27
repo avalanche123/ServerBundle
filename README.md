@@ -1,7 +1,8 @@
 README
 ======
 
-See http://wiki.github.com/pminnieur/ServerBundle/.
+For the full documentation and more informations, please view the official
+[Wiki](http://wiki.github.com/pminnieur/ServerBundle/) on GitHub.
 
 
 LICENSE
