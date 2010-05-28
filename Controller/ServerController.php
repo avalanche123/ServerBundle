@@ -2,7 +2,7 @@
 
 namespace Bundle\ServerBundle\Controller;
 
-use Bundle\ServerBundle\Controller\ServerController;
+use Symfony\Framework\WebBundle\Controller;
 
 /*
  * This file is part of the ServerBundle package.
@@ -18,21 +18,21 @@ use Bundle\ServerBundle\Controller\ServerController;
  * @subpackage Controller
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-class DefaultController extends ServerController
+abstract class ServerController extends Controller
 {
     /**
-     * @return Response
+     * @return Bundle\ServerBundle\DaemonInterface
      */
-    public function infoAction()
+    public function getDaemon()
     {
-        return $this->render('ServerBundle:Default:info', array('server' => $this->getServer()));
+        return $this->container->getDaemonService();
     }
 
     /**
-     * @return Response
+     * @return Bundle\ServerBundle\ServerInterface
      */
-    public function statusAction()
+    public function getServer()
     {
-        return $this->render('ServerBundle:Default:status', array('server' => $this->getServer()));
+        return $this->container->getServerService();
     }
 }
