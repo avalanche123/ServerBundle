@@ -39,7 +39,6 @@
         <argument type="collection">
           <argument key="kernel_environment">%server.kernel_environment%</argument>
           <argument key="kernel_debug">%server.kernel_debug%</argument>
-          <argument key="protocol">%server.protocol%</argument>
           <argument key="address">%server.address%</argument>
           <argument key="port">%server.port%</argument>
           <argument key="document_root">%server.document_root%</argument>
@@ -68,7 +67,6 @@
     <service id="server" class="%server.class%" shared="false">
       <argument type="service" id="server.event_dispatcher" />
       <argument type="collection">
-        <argument key="protocol">%server.protocol%</argument>
         <argument key="address">%server.address%</argument>
         <argument key="port">%server.port%</argument>
         <argument key="max_clients">%server.max_clients%</argument>

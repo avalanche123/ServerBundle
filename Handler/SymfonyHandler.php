@@ -42,7 +42,6 @@ class SymfonyHandler implements HandlerInterface
         $this->options = array(
             'kernel_environment' => 'dev',
             'kernel_debug'       => true,
-            'protocol'           => 'tcp',
             'address'            => '127.0.0.1',
             'port'               => 1962,
             'document_root'      => $this->kernel->getRootDir().'/../web'
@@ -54,6 +53,9 @@ class SymfonyHandler implements HandlerInterface
         }
 
         $this->options = array_merge($this->options, $options);
+
+        // protocol must be TCP
+        $this->options['protocol'] = 'tcp';
 
         // start a custom kernel if needed
         if ($this->options['kernel_environment'] != $this->kernel->getEnvironment() ||
