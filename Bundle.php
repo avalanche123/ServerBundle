@@ -28,6 +28,6 @@ class Bundle extends BaseBundle
      */
     public function buildContainer(ContainerInterface $container)
     {
-      Loader::registerExtension(new ServerExtension($container));
+        Loader::registerExtension(new ServerExtension($container));
     }
 }
