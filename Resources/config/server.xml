@@ -23,8 +23,8 @@
     <parameter key="error404_handler.class">Bundle\ServerBundle\Handler\Error404Handler</parameter>
 
     <!-- (Response) Filters -->
-    <parameter key="compression_filter.class">Bundle\ServerBundle\Filter\Http\CompressionFilter</parameter>
-    <parameter key="statistics_filter.class">Bundle\ServerBundle\Filter\Http\StatisticsFilter</parameter>
+    <parameter key="compression_filter.class">Bundle\ServerBundle\Filter\CompressionFilter</parameter>
+    <parameter key="statistics_filter.class">Bundle\ServerBundle\Filter\StatisticsFilter</parameter>
   </parameters>
 
   <services>

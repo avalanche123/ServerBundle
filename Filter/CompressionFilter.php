@@ -1,10 +1,10 @@
 <?php
 
-namespace Bundle\ServerBundle\Filter\Http;
+namespace Bundle\ServerBundle\Filter;
 
-use Symfony\Components\EventDispatcher\EventDispatcher,
-    Symfony\Components\EventDispatcher\Event,
-    Bundle\ServerBundle\Filter\HttpFilter;
+use Bundle\ServerBundle\Filter\FilterInterface,
+    Symfony\Components\EventDispatcher\EventDispatcher,
+    Symfony\Components\EventDispatcher\Event;
 
 /*
  * This file is part of the ServerBundle package.
@@ -21,8 +21,18 @@ use Symfony\Components\EventDispatcher\EventDispatcher,
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
 
-class StatisticsFilter extends HttpFilter
+class CompressionFilter implements FilterInterface
 {
+    protected $enabled;
+
+    /**
+     * @param boolean $enabled
+     */
+    public function __construct($enabled = false)
+    {
+        $this->enabled = $enabled;
+    }
+
     /**
      * @param EventDispatcher $dispatcher
      */
@@ -47,10 +57,33 @@ class StatisticsFilter extends HttpFilter
 
         return $value;
 
-        // collect statistics about the response, because it will be send ...
-        // ... after that filter immediately. Dunno where to store that stats!
+        // parse headers, check which compression is available
+
+        // determine best (deflate > gzip) for available compressions
+
+        // compress data
+        // $data = $this->deflate($date);
+        // $data = $this->gzip($data)
 
         // @TODO must be clarified how the dispatching of the event works
         // return $event / $data / whatever
+    }
+
+    /**
+     * @param string $data
+     * @return string
+     */
+    protected function deflate($data)
+    {
+      return gzdeflate($data, 9);
+    }
+
+    /**
+     * @param string $data
+     * @return string
+     */
+    protected function gzip($data)
+    {
+      return gzcompress($data, 9);
     }
 }

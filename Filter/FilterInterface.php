@@ -25,13 +25,4 @@ interface FilterInterface
      * @param EventDispatcher $dispatcher
      */
     function register(EventDispatcher $dispatcher);
-
-    /**
-     * @param Event $event
-     * @param mixed $value
-     * @return mixed
-     *
-     * @see EventDispatcher::filter()
-     */
-    function filter(Event $event, $value);
 }
