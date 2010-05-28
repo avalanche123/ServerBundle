@@ -125,10 +125,6 @@ class ServerExtension extends LoaderExtension
             $configuration->setParameter('server.kernel_debug', $this->container->getParameter('kernel.debug'));
         }
 
-        if (isset($config['protocol'])) {
-            $configuration->setParameter('server.protocol', $config['protocol']);
-        }
-
         if (isset($config['address'])) {
             $configuration->setParameter('server.address', $config['address']);
         }

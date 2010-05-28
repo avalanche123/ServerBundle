@@ -32,15 +32,16 @@ class Server implements ServerInterface
     protected $servers;
     protected $shutdown;
 
-
     /**
      * @param EventDispatcher $dispatcher
      * @param array $options (optional)
      *
      * @throws \InvalidArgumentException When an unsupported option is provided
-     * @throws \InvalidArgumentException If invalid socket client class is provided
-     * @throws \InvalidArgumentException If invalid socket server class is provided
-     * @throws \InvalidArgumentException If invalid socket server client class is provided
+     * @throws \InvalidArgumentException If the address is not a valid IP address
+     * @throws \InvalidArgumentException If the port number is not in range from 0 to 65535
+     * @throws \InvalidArgumentException If an invalid socket client class is provided
+     * @throws \InvalidArgumentException If an invalid socket server class is provided
+     * @throws \InvalidArgumentException If an invalid socket server client class is provided
      */
     public function __construct(EventDispatcher $dispatcher, array $options = array())
     {
@@ -54,7 +55,6 @@ class Server implements ServerInterface
         $serverClientClass = 'Bundle\\ServerBundle\\Socket\\Http\\ServerClientSocket';
 
         $this->options = array(
-            'protocol'                   => 'tcp',
             'address'                    => '*',
             'port'                       => 1962,
             'max_clients'                => 100,
@@ -71,6 +71,29 @@ class Server implements ServerInterface
         }
 
         $this->options = array_merge($this->options, $options);
+
+        // protocol must be TCP
+        $this->options['protocol'] = 'tcp';
+
+        // convert wildcard '*' to '0.0.0.0'
+        if ('*' == $this->options['address']) {
+            $this->options['address'] = '0.0.0.0';
+        }
+
+        // validate [IPv4/6] address
+        if (false === filter_var($this->options['address'], FILTER_VALIDATE_IP)) {
+            throw new \InvalidArgumentException(sprintf('The address "%s" is not a valid IP address', $this->options['address']));
+        }
+
+        // cover IPv6 address in braces
+        if (true === filter_var($this->options['address'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $this->options['address'] = sprintf('[%s]', $this->options['address']);
+        }
+
+        // validate port number
+        if ($this->options['port'] > 65535) {
+            throw new \InvalidArgumentException('The port number must range from 0 to 65535');
+        }
 
         // check socket client class
         if (!$this->checkSocketClass($clientClass, $this->options['socket_client_class'])) {

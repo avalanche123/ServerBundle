@@ -9,7 +9,6 @@
     <parameter key="server.event_dispatcher.class">Bundle\ServerBundle\EventDispatcher</parameter>
 
     <!-- Configuration -->
-    <parameter key="server.protocol">tcp</parameter>
     <parameter key="server.address">*</parameter>
     <parameter key="server.port">1962</parameter>
     <parameter key="server.max_clients">100</parameter>
