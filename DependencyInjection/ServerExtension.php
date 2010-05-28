@@ -41,6 +41,8 @@ class ServerExtension extends LoaderExtension
     /**
      * @param array $config
      * @return BuilderConfiguration
+     *
+     * @throws \InvalidArgumentException If Daemon class does not implement DaemonInterface
      */
     public function daemonLoad($config)
     {
@@ -48,6 +50,16 @@ class ServerExtension extends LoaderExtension
 
         $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
         $configuration->merge($loader->load($this->resources['daemon']));
+
+        if (isset($config['class'])) {
+            $r = new \ReflectionClass($config['class']);
+
+            if (!$r->implementsInterface($interface = 'Bundle\\ServerBundle\\DaemonInterface')) {
+                throw new \InvalidArgumentException(sprintf('Daemon class "%s" must implement "%s"', $config['class'], $interface));
+            }
+
+            $configuration->setParameter('daemon.class', $config['class']);
+        }
 
         if (isset($config['pid_file'])) {
             $configuration->setParameter('daemon.pid_file', $config['pid_file']);
@@ -71,6 +83,8 @@ class ServerExtension extends LoaderExtension
     /**
      * @param array $config
      * @return BuilderConfiguration
+     *
+     * @throws \InvalidArgumentException If Server class does not implement ServerInterface
      */
     public function serverLoad($config)
     {
@@ -78,6 +92,16 @@ class ServerExtension extends LoaderExtension
 
         $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
         $configuration->merge($loader->load($this->resources['server']));
+
+        if (isset($config['class'])) {
+            $r = new \ReflectionClass($config['class']);
+
+            if (!$r->implementsInterface($interface = 'Bundle\\ServerBundle\\ServerInterface')) {
+                throw new \InvalidArgumentException(sprintf('Server class "%s" must implement "%s"', $config['class'], $interface));
+            }
+
+            $configuration->setParameter('daemon.class', $config['class']);
+        }
 
         if (isset($config['environment'])) {
             $configuration->setParameter('server.kernel_environment', $config['environment']);
