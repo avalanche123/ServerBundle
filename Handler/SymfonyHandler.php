@@ -3,12 +3,13 @@
 namespace Bundle\ServerBundle\Handler;
 
 use Bundle\ServerBundle\Handler\HandlerInterface,
+    Bundle\ServerBundle\Response,
     Symfony\Components\EventDispatcher\EventDispatcher,
     Symfony\Components\EventDispatcher\Event,
     Symfony\Components\HttpKernel\HttpKernelInterface,
     Symfony\Foundation\Kernel,
-    Symfony\Components\HttpKernel\Request,
-    Symfony\Components\HttpKernel\Response;
+    Symfony\Components\HttpKernel\Request as SymfonyRequest,
+    Symfony\Components\HttpKernel\Response as SymfonyResponse;
 
 /*
  * This file is part of the ServerBundle package.
@@ -105,8 +106,8 @@ class SymfonyHandler implements HandlerInterface
 
         // @TODO: what's up w/ _SESSION?
 
-        // initialize HttpKernel\Request
-        $sfRequest = Request::create($requestUrl, $requestMethod, $parameters, $cookies, $files, $server);
+        // initialize SymfonyRequest
+        $sfRequest = SymfonyRequest::create($requestUrl, $requestMethod, $parameters, $cookies, $files, $server);
 
         try
         {
@@ -117,7 +118,7 @@ class SymfonyHandler implements HandlerInterface
             }
         } catch (\Exception $e) {
             $code    = 500;
-            $status  = Response::$statusTexts[$code];
+            $status  = SymfonyResponse::$statusTexts[$code];
             $headers = array();
             $content = sprintf('<h1>Error %d - %s</h1>', $code, $status);
             // ExceptionController-like view renderer would be cool
@@ -129,12 +130,10 @@ class SymfonyHandler implements HandlerInterface
             // add Content-Length header
             $headers['Content-Length'] = strlen($content);
 
-            // build HttpMessage response
-            $response = new \HttpMessage();
+            // build Response
+            $response = new Response();
             $response->setHttpVersion($request->getHttpVersion());
-            $response->setType(HTTP_MSG_RESPONSE);
-            $response->setResponseCode($code);
-            $response->setResponseStatus($status);
+            $response->setStatusCode($code, $status);
             $response->addHeaders($headers);
             $response->setBody($content);
 
@@ -151,12 +150,10 @@ class SymfonyHandler implements HandlerInterface
         $sfContent = $sfResponse->getContent();
         $sfResponse->headers->set('Content-Length', strlen($sfContent));
 
-        // build HttpMessage response
-        $response = new \HttpMessage();
-        $response->setType(HTTP_MSG_RESPONSE);
+        // build Response
+        $response = new Response();
         $response->setHttpVersion($sfResponse->getProtocolVersion());
-        $response->setResponseCode($code = $sfResponse->getStatusCode());
-        $response->setResponseStatus(Response::$statusTexts[$code]);
+        $response->setStatusCode($sfResponse->getStatusCode());
         $response->addHeaders($sfResponse->headers->all());
         $response->setBody($sfContent);
 

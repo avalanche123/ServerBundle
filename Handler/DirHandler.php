@@ -3,6 +3,7 @@
 namespace Bundle\ServerBundle\Handler;
 
 use Bundle\ServerBundle\Handler\HandlerInterface,
+    Bundle\ServerBundle\Response,
     Symfony\Components\EventDispatcher\EventDispatcher,
     Symfony\Components\EventDispatcher\Event,
     Symfony\Components\Finder\Finder;
@@ -94,12 +95,10 @@ class DirHandler implements HandlerInterface
             // add Content-Length header
             $headers['Content-Length'] = filesize($path);
 
-            // build HttpMessage response
-            $response = new \HttpMessage();
-            $response->setType(HTTP_MSG_RESPONSE);
+            // build Response
+            $response = new Response();
             $response->setHttpVersion($request->getHttpVersion());
-            $response->setResponseCode(200);
-            $response->setResponseStatus('OK');
+            $response->setStatusCode(200);
             $response->addHeaders($headers);
             $response->setBody(file_get_contents($path));
 
@@ -177,12 +176,10 @@ EOF;
             // add Content-Length header
             $headers['Content-Length'] = strlen($content);
 
-            // build HttpMessage response
-            $response = new \HttpMessage();
-            $response->setType(HTTP_MSG_RESPONSE);
+            // build Response
+            $response = new Response();
             $response->setHttpVersion($request->getHttpVersion());
-            $response->setResponseCode(200);
-            $response->setResponseStatus('OK');
+            $response->setStatusCode(200);
             $response->addHeaders($headers);
             $response->setBody($content);
 

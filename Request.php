@@ -81,7 +81,7 @@ class Request implements RequestInterface, \Serializable
      */
     public function getHttpVersion()
     {
-        return $this->version;
+        return $this->httpVersion;
     }
 
     /**
@@ -89,7 +89,7 @@ class Request implements RequestInterface, \Serializable
      */
     public function getRequestMethod()
     {
-        return $this->method;
+        return $this->requestMethod;
     }
 
     /**
@@ -97,7 +97,7 @@ class Request implements RequestInterface, \Serializable
      */
     public function getRequestUrl()
     {
-        return $this->url;
+        return $this->requestUrl;
     }
 
     /**

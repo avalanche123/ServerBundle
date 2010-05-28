@@ -5,6 +5,8 @@ namespace Bundle\ServerBundle;
 use Bundle\ServerBundle\ServerInterface,
     Bundle\ServerBundle\EventDispatcher,
     Bundle\ServerBundle\DaemonInterface,
+    Bundle\ServerBundle\Request,
+    Bundle\ServerBundle\Response,
     Symfony\Components\EventDispatcher\Event;
 
 /*
@@ -159,10 +161,10 @@ class Server implements ServerInterface
                     if ($this->isClientSocket($socket)) {
                         $client = $this->findSocket($socket);
 
-                        /** @var $request \HttpMessage */
+                        /** @var $request Request */
                         $request = $client->readRequest();
 
-                        if (!$request instanceof \HttpMessage) {
+                        if (!$request instanceof Request) {
                             // @TODO disconnect client?
                             continue;
                         }
@@ -171,13 +173,13 @@ class Server implements ServerInterface
                         $event = $this->dispatcher->notifyUntil(new Event($request, 'server.request'));
 
                         if ($event->isProcessed()) {
-                            /** @var $response \HttpMessage */
+                            /** @var $response Response */
                             $response = $event->getReturnValue();
 
                             // filter response
                             $event = $this->dispatcher->filter(new Event($request, 'server.response'), $response);
 
-                            /** @var $response \HttpMessage */
+                            /** @var $response Response */
                             $response = $event->getReturnValue();
 
                             // @TODO add response checks?

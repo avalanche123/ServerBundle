@@ -40,11 +40,6 @@ class StatisticsFilter implements FilterInterface
      */
     public function filter(Event $event, $value)
     {
-        if (!$value instanceof \HttpMessage)
-        {
-            return $value;
-        }
-
         return $value;
 
         // collect statistics about the response, because it will be send ...

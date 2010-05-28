@@ -50,11 +50,6 @@ class CompressionFilter implements FilterInterface
      */
     public function filter(Event $event, $value)
     {
-        if (!$value instanceof \HttpMessage)
-        {
-            return $value;
-        }
-
         return $value;
 
         // parse headers, check which compression is available

@@ -3,8 +3,10 @@
 namespace Bundle\ServerBundle\Handler;
 
 use Bundle\ServerBundle\Handler\HandlerInterface,
+    Bundle\ServerBundle\Response,
     Symfony\Components\EventDispatcher\EventDispatcher,
-    Symfony\Components\EventDispatcher\Event;
+    Symfony\Components\EventDispatcher\Event,
+    Symfony\Components\HttpKernel\Response as SymfonyResponse;
 
 /*
  * This file is part of the ServerBundle package.
@@ -41,7 +43,7 @@ class Error404Handler implements HandlerInterface
         $request = $event->getSubject();
 
         $code    = 404;
-        $status  = 'Not Found';
+        $status  = SymfonyResponse::$statusTexts[$code];
         $headers = array();
         $content = '<h1>Error 404 - Not Found</h1>';
         // ExceptionController-like view renderer would be cool
@@ -53,12 +55,10 @@ class Error404Handler implements HandlerInterface
         // add Content-Length header
         $headers['Content-Length'] = strlen($content);
 
-        // build HttpMessage response
-        $response = new \HttpMessage();
+        // build Response
+        $response = new Response();
         $response->setHttpVersion($request->getHttpVersion());
-        $response->setType(HTTP_MSG_RESPONSE);
-        $response->setResponseCode($code);
-        $response->setResponseStatus($status);
+        $response->setStatusCode($code, $status);
         $response->addHeaders($headers);
         $response->setBody($content);
 

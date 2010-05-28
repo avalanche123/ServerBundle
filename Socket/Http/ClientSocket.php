@@ -2,7 +2,9 @@
 
 namespace Bundle\ServerBundle\Socket\Http;
 
-use Bundle\ServerBundle\Socket\HttpSocket;
+use Bundle\ServerBundle\Socket\HttpSocket,
+    Bundle\ServerBundle\Request,
+    Bundle\ServerBundle\Response;
 
 /*
  * This file is part of the ServerBundle package.
@@ -51,7 +53,7 @@ class ClientSocket extends HttpSocket
     }
 
     /**
-     * @return HttpMessage
+     * @return Request
      *
      * @TODO move ClientSocket::doRead() logic in here
      */
@@ -68,7 +70,31 @@ class ClientSocket extends HttpSocket
     }
 
     /**
-     * @return \HttpMessage
+     * @return boolean|Request
+     */
+    protected function doRead()
+    {
+        $message = $this->read();
+        $message = trim($message);
+
+        if (empty($message)) {
+            return false;
+        }
+
+        // parse HTTP message
+        try {
+            $request = new Request($message);
+        } catch (\InvalidArgumentException $e) {
+            return false;
+        }
+
+        // @TODO keep-alive
+
+        return $request;
+    }
+
+    /**
+     * @return Request
      */
     public function getRequest()
     {
@@ -78,84 +104,44 @@ class ClientSocket extends HttpSocket
     /**
      * @param HttpMessage $message
      *
+     * @throws \InvalidArgumentException If there is no Response to send
+     *
      * @TODO move ClientSocket::doWrite() logic in here
      */
-    public function sendResponse(\HttpMessage $message = null)
+    public function sendResponse(Response $response = null)
     {
-        if (null !== $message) {
-            $this->response = $message;
+        if (null !== $response) {
+            $this->response = $response;
         }
 
         if (null === $this->response) {
-            throw new \Exception('No response to send');
+            throw new \InvalidArgumentException('No Response to send');
         }
 
-        $message = $this->response;
+        $response = $this->response;
 
         $this->request  = null;
         $this->response = null;
 
         // write to socket
-        return $this->doWrite($message);
+        return $this->doWrite($response);
     }
 
     /**
-     * @return \HttpMessage
+     * @param Response $response
+     * @return integer
+     */
+    protected function doWrite(Response $response)
+    {
+        return $this->write($response->toString());
+    }
+
+    /**
+     * @return Response
      */
     public function getResponse()
     {
         return $this->response;
-    }
-
-    /**
-     * @return boolean|HttpMessage
-     */
-    protected function doRead()
-    {
-        $data = $this->read();
-        $data = trim($data);
-
-        if (empty($data)) {
-            return false;
-        }
-
-        // parse HTTP message
-        $message = new \HttpMessage($data);
-
-        // skip on non-requests
-        if ($message->getType() != HTTP_MSG_REQUEST) {
-            return false;
-        }
-
-        // @TODO keep-alive
-
-        return $message;
-    }
-
-    /**
-     * @param HttpMessage $message
-     * @return integer
-     */
-    protected function doWrite(\HttpMessage $message)
-    {
-        $buffer = sprintf("HTTP/%s %d %s\r\n",
-            $message->getHttpVersion(),
-            $message->getResponseCode(),
-            $message->getResponseStatus()
-        );
-
-        foreach ($message->getHeaders() as $header => $value) {
-            $buffer .= sprintf("%s: %s\r\n",
-                $header,
-                $value
-            );
-        }
-
-        $buffer .= "\r\n";
-        $buffer .= $message->getBody();
-        $buffer .= "\r\n";
-
-        return $this->write($buffer);
     }
 
     /**
