@@ -1,9 +1,10 @@
 <?php
 
-namespace Bundle\ServerBundle\Server;
+namespace Bundle\ServerBundle;
 
-use Bundle\ServerBundle\Server\Server,
+use Bundle\ServerBundle\ServerInterface,
     Bundle\ServerBundle\EventDispatcher,
+    Bundle\ServerBundle\DaemonInterface,
     Symfony\Components\EventDispatcher\Event;
 
 /*
@@ -20,30 +21,27 @@ use Bundle\ServerBundle\Server\Server,
  * @subpackage Server
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-class HttpServer extends Server
+class Server implements ServerInterface
 {
+    protected $daemon;
     protected $dispatcher;
     protected $options;
     protected $clients;
     protected $servers;
     protected $shutdown;
 
+
     /**
      * @param EventDispatcher $dispatcher
      * @param array $options (optional)
      *
-     * @throws \Exception If pecl_http extension is not loaded
-     * @throws \InvalidArgumentException When unsupported option is provided
+     * @throws \InvalidArgumentException When an unsupported option is provided
      * @throws \InvalidArgumentException If invalid socket client class is provided
      * @throws \InvalidArgumentException If invalid socket server class is provided
      * @throws \InvalidArgumentException If invalid socket server client class is provided
      */
     public function __construct(EventDispatcher $dispatcher, array $options = array())
     {
-        if (!extension_loaded('http')) {
-            throw new \Exception('pecl_http extension not loaded.');
-        }
-
         $this->dispatcher = $dispatcher;
         $this->clients    = array();
         $this->servers    = array();
@@ -86,6 +84,22 @@ class HttpServer extends Server
         if (!$this->checkSocketClass($serverClientClass, $this->options['socket_server_client_class'])) {
             throw new \InvalidArgumentException(sprintf('Server client socket class must be a sublass of "%s"', $serverClientClass));
         }
+    }
+
+    /**
+     * @param DaemonInterface $daemon
+     */
+    public function setDaemon(DaemonInterface $daemon)
+    {
+        $this->daemon = $daemon;
+    }
+
+    /**
+     * @return DaemonInterface
+     */
+    public function getDaemon()
+    {
+        return $this->daemon;
     }
 
     /**
@@ -319,12 +333,12 @@ class HttpServer extends Server
      * @param resource $socket
      * @return boolean
      *
-     * @throws \Exception If socket is not a valid resource
+     * @throws \InvalidArgumentException If socket is not a valid resource
      */
     protected function isServerSocket($socket)
     {
         if (!is_resource($socket)) {
-            throw new \Exception('Socket must be a valid resource');
+            throw new \InvalidArgumentException('Socket must be a valid resource');
         }
 
         if (isset($this->servers[(integer) $socket])) {
@@ -360,14 +374,14 @@ class HttpServer extends Server
 
     /**
      * @param resource $socket
-     * @return null|Bundle\ServerBundle\Socket\SocketInterface
+     * @return null|SocketInterface
      *
-     * @throws \Exception If socket is not a valid resource
+     * @throws \InvalidArgumentException If socket is not a valid resource
      */
     protected function findSocket($socket)
     {
         if (!is_resource($socket)) {
-            throw new \Exception('Socket must be a valid resource');
+            throw new \InvalidArgumentException('Socket must be a valid resource');
         }
 
         $id = (integer) $socket;

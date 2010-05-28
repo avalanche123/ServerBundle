@@ -5,7 +5,7 @@
 
   <parameters>
     <!-- Services -->
-    <parameter key="server.http.class">Bundle\ServerBundle\Server\HttpServer</parameter>
+    <parameter key="server.class">Bundle\ServerBundle\Server</parameter>
     <parameter key="server.event_dispatcher.class">Bundle\ServerBundle\EventDispatcher</parameter>
 
     <!-- Configuration -->
@@ -66,7 +66,7 @@
       <argument type="service" id="service_container" />
     </service>
 
-    <service id="server.http" class="%server.http.class%" shared="false">
+    <service id="server" class="%server.class%" shared="false">
       <argument type="service" id="server.event_dispatcher" />
       <argument type="collection">
         <argument key="protocol">%server.protocol%</argument>
@@ -80,7 +80,5 @@
         <argument key="socket_server_client_class">Bundle\ServerBundle\Socket\Http\ServerClientSocket</argument>
       </argument>
     </service>
-
-    <service id="server" alias="server.http" />
   </services>
 </container>
