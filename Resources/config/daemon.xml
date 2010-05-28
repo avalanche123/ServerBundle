@@ -4,7 +4,7 @@
   xsi:schemaLocation="http://www.symfony-project.org/schema/dic/services http://www.symfony-project.org/schema/dic/services/services-1.0.xsd">
 
   <parameters>
-    <parameter key="daemon.http.class">Bundle\ServerBundle\Daemon\HttpDaemon</parameter>
+    <parameter key="daemon.class">Bundle\ServerBundle\Daemon</parameter>
     <parameter key="daemon.pid_file">%kernel.cache_dir%/server.pid</parameter>
     <parameter key="daemon.user" type="constant">null</parameter>
     <parameter key="daemon.group" type="constant">null</parameter>
@@ -12,14 +12,12 @@
   </parameters>
 
   <services>
-    <service id="daemon.http" class="%daemon.http.class%">
+    <service id="daemon" class="%daemon.class%">
       <argument type="service" id="server" />
       <argument>%daemon.pid_file%</argument>
       <argument>%daemon.user%</argument>
       <argument>%daemon.group%</argument>
       <argument>%daemon.umask%</argument>
     </service>
-
-    <service id="daemon" alias="daemon.http" />
   </services>
 </container>

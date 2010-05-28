@@ -1,8 +1,9 @@
 <?php
 
-namespace Bundle\ServerBundle\Daemon;
+namespace Bundle\ServerBundle;
 
-use Bundle\ServerBundle\Daemon\DaemonInterface;
+use Bundle\ServerBundle\DaemonInterface,
+    Bundle\ServerBundle\ServerInterface;
 
 /*
  * This file is part of the ServerBundle package.
@@ -18,41 +19,49 @@ use Bundle\ServerBundle\Daemon\DaemonInterface;
  * @subpackage Daemon
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-abstract class Daemon implements DaemonInterface
+class Daemon implements DaemonInterface
 {
+    protected $server;
     protected $isChild;
     protected $pidFile;
     protected $group;
     protected $user;
 
     /**
-     * @param string $pidFile
+     *
+     * @param ServerInterface $server
+     * @param string $pidFile (optional)
      * @param integer|string $user (optional)
      * @param integer|string $group (optional)
      * @param integer $umask (optional)
      *
-     * @throws \Exception If trying to run on Windows
-     * @throws \Exception If trying to run on an environment other than CLI
-     * @throws \Exception If pcntl_* functions are not available
-     * @throws \Exception if posix_* functions are not available
+     * @throws \RuntimeException If trying to run on Windows
+     * @throws \RuntimeException If trying to run on an environment other than CLI
+     * @throws \RuntimeException If pcntl_* functions are not available
+     * @throws \RuntimeException if posix_* functions are not available
+     * @throws \InvalidArgumentException If the user does not exist
+     * @throws \InvalidArgumentException If the group does not exist
      */
-    public function __construct($pidFile, $user = null, $group = null, $umask = null)
+    public function __construct(ServerInterface $server, $pidFile, $user = null, $group = null, $umask = null)
     {
         if (substr(PHP_OS, 0, 3) === 'WIN') {
-            throw new \Exception('Cannot run on windows');
+            throw new \RuntimeException('Cannot run on windows');
         }
 
         if (substr(PHP_SAPI, 0, 3) !== 'cli') {
-            throw new \Exception('Can only run on CLI environment');
+            throw new \RuntimeException('Can only run on CLI environment');
         }
 
         if (!function_exists('pcntl_fork')) {
-            throw new \Exception('pcntl_* functions are required');
+            throw new \RuntimeException('pcntl_* functions are required');
         }
 
         if (!function_exists('posix_kill')) {
-            throw new \Exception('posix_* functions are required');
+            throw new \RuntimeException('posix_* functions are required');
         }
+
+        $this->server  = $server;
+        $this->server->setDaemon($this);
 
         $this->isChild = false;
         $this->pidFile = $pidFile;
@@ -64,7 +73,7 @@ abstract class Daemon implements DaemonInterface
             $user = posix_getpwnam($this->user);
 
             if (false === $user) {
-                throw new \Exception(sprintf('User "%s" does not exist', $this->user));
+                throw new \InvalidArgumentException(sprintf('User "%s" does not exist', $this->user));
             }
 
             $this->user = $user['uid'];
@@ -75,7 +84,7 @@ abstract class Daemon implements DaemonInterface
             $group = posix_getgrnam($this->group);
 
             if (false === $group) {
-                throw new \Exception(sprintf('Group "%s" does not exist', $this->group));
+                throw new \InvalidArgumentException(sprintf('Group "%s" does not exist', $this->group));
             }
 
             $this->group = $group['gid'];
@@ -84,22 +93,35 @@ abstract class Daemon implements DaemonInterface
         if (null !== $umask) {
             umask($umask);
         }
+
+        declare(ticks = 1);
+
+        // pcntl signal handlers
+        pcntl_signal(SIGTERM, array($this, 'signalHandler'));
+    }
+
+    /**
+     * @param integer $signo
+     */
+    public function signalHandler($signo)
+    {
+        switch ($signo) {
+            case SIGTERM:
+                $this->server->shutdown();
+            break;
+        }
     }
 
     /**
      * @return boolean
-     */
-    abstract protected function process();
-
-    /**
-     * @return boolean
      *
-     * @throws \Exception If a daemon is already started
+     * @throws \RuntimeException If the daemon is already started
+     * @throws \RuntimeException If the process forking fails
      */
     public function start()
     {
         if ($pid = $this->readPidFile()) {
-            throw new \Exception(sprintf('Daemon already started (PID: "%d")', $pid));
+            throw new \RuntimeException(sprintf('Daemon already started with pid "%d")', $pid));
         }
 
         set_time_limit(0);
@@ -112,7 +134,7 @@ abstract class Daemon implements DaemonInterface
         $pid = @pcntl_fork();
 
         if ($pid === -1) {
-            throw new \Exception('Forking process failed');
+            throw new \RuntimeException('Forking process failed');
         }
 
         if ($pid === 0) {
@@ -130,10 +152,7 @@ abstract class Daemon implements DaemonInterface
 
             $this->writePidFile();
 
-            try {
-                $this->process();
-            } catch (\Exception $e) {
-            }
+            $this->server->start();
 
             $this->removePidFile();
 
@@ -178,7 +197,7 @@ abstract class Daemon implements DaemonInterface
      */
     public function isChild()
     {
-        return $this->isChild;
+      return $this->isChild;
     }
 
     /**
@@ -193,11 +212,10 @@ abstract class Daemon implements DaemonInterface
         return file_get_contents($this->pidFile);
     }
 
-
     /**
      * @return boolean
      *
-     * @throws \Exception If pid file already exist
+     * @throws \RuntimeException If pid file already exist
      */
     protected function writePidFile()
     {
@@ -206,7 +224,7 @@ abstract class Daemon implements DaemonInterface
         }
 
         if (is_readable($this->pidFile)) {
-            throw new \Exception(sprintf('Pid file "%s" already exist', $this->pidFile));
+            throw new \RuntimeException(sprintf('Pid file "%s" already exist', $this->pidFile));
         }
 
         return file_put_contents($this->pidFile, getmypid()) > 0;
@@ -215,12 +233,12 @@ abstract class Daemon implements DaemonInterface
     /**
      * @return boolean
      *
-     * @throws \Exception If pid file is not writeable
+     * @throws \RuntimeException If pid file is not writeable
      */
     protected function removePidFile()
     {
         if (!is_writeable($this->pidFile)) {
-            throw new \Exception(sprintf('Cannot delete pid file "%s"', $this->pidFile));
+            throw new \RuntimeException(sprintf('Cannot delete pid file "%s"', $this->pidFile));
         }
 
         return unlink($this->pidFile);

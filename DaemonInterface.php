@@ -1,6 +1,6 @@
 <?php
 
-namespace Bundle\ServerBundle\Daemon;
+namespace Bundle\ServerBundle;
 
 /*
  * This file is part of the ServerBundle package.
@@ -27,4 +27,14 @@ interface DaemonInterface
      * @return boolean
      */
     function stop();
+
+    /**
+     * @return boolean
+     */
+    function restart();
+
+    /**
+     * @return boolean
+     */
+    function isChild();
 }
