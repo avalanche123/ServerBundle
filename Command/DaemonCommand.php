@@ -22,4 +22,15 @@ use Symfony\Components\Console\Input\InputInterface,
  */
 abstract class DaemonCommand extends Command
 {
+    protected $daemon;
+
+    /**
+     * @see Command
+     */
+    protected function initialize(InputInterface $input, OutputInterface $output)
+    {
+        parent::initialize($input, $output);
+
+        $this->daemon = $this->container->getDaemonService();
+    }
 }

@@ -65,7 +65,7 @@ class StartCommand extends DaemonCommand
             return $this->container->getServerService()->start();
         }
 
-        if ($this->container->getDaemonService()->start()) {
+        if ($this->daemon->start()) {
             $output->writeln('server started');
         } else {
             $output->writeln('cannot start server');

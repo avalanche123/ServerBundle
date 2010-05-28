@@ -35,15 +35,13 @@ class RestartCommand extends DaemonCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $daemon = $this->container->getDaemonService();
-
-        if ($daemon->stop()) {
+        if ($this->daemon->stop()) {
             $output->writeln('server stopped');
         } else {
             $output->writeln('cannot stop server');
         }
 
-        if ($daemon->start()) {
+        if ($this->daemon->start()) {
             $output->writeln('server started');
         } else {
             $output->writeln('cannot start server');
