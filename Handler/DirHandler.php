@@ -1,10 +1,10 @@
 <?php
 
-namespace Bundle\ServerBundle\Handler\Http;
+namespace Bundle\ServerBundle\Handler;
 
-use Symfony\Components\EventDispatcher\EventDispatcher,
+use Bundle\ServerBundle\Handler\HandlerInterface,
+    Symfony\Components\EventDispatcher\EventDispatcher,
     Symfony\Components\EventDispatcher\Event,
-    Bundle\ServerBundle\Handler\HttpHandler,
     Symfony\Components\Finder\Finder;
 
 /*
@@ -21,7 +21,7 @@ use Symfony\Components\EventDispatcher\EventDispatcher,
  * @subpackage Handler
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-class DirHandler extends HttpHandler
+class DirHandler implements HandlerInterface
 {
     protected $documentRoot;
 

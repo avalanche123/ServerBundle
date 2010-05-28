@@ -1,11 +1,11 @@
 <?php
 
-namespace Bundle\ServerBundle\Handler\Http;
+namespace Bundle\ServerBundle\Handler;
 
-use Symfony\Components\HttpKernel\HttpKernelInterface,
+use Bundle\ServerBundle\Handler\HandlerInterface,
     Symfony\Components\EventDispatcher\EventDispatcher,
     Symfony\Components\EventDispatcher\Event,
-    Bundle\ServerBundle\Handler\HttpHandler,
+    Symfony\Components\HttpKernel\HttpKernelInterface,
     Symfony\Foundation\Kernel,
     Symfony\Components\HttpKernel\Request,
     Symfony\Components\HttpKernel\Response;
@@ -24,7 +24,7 @@ use Symfony\Components\HttpKernel\HttpKernelInterface,
  * @subpackage Handler
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-class SymfonyHandler extends HttpHandler
+class SymfonyHandler implements HandlerInterface
 {
     protected $kernel;
     protected $customKernel;

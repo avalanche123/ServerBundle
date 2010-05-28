@@ -1,10 +1,10 @@
 <?php
 
-namespace Bundle\ServerBundle\Handler\Http;
+namespace Bundle\ServerBundle\Handler;
 
-use Symfony\Components\EventDispatcher\EventDispatcher,
-    Symfony\Components\EventDispatcher\Event,
-    Bundle\ServerBundle\Handler\HttpHandler;
+use Bundle\ServerBundle\Handler\HandlerInterface,
+    Symfony\Components\EventDispatcher\EventDispatcher,
+    Symfony\Components\EventDispatcher\Event;
 
 /*
  * This file is part of the ServerBundle package.
@@ -20,7 +20,7 @@ use Symfony\Components\EventDispatcher\EventDispatcher,
  * @subpackage Handler
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-class Error404Handler extends HttpHandler
+class Error404Handler implements HandlerInterface
 {
     /**
      * @param EventDispatcher $dispatcher

@@ -2,8 +2,7 @@
 
 namespace Bundle\ServerBundle\Handler;
 
-use Symfony\Components\EventDispatcher\EventDispatcher,
-    Symfony\Components\EventDispatcher\Event;
+use Symfony\Components\EventDispatcher\EventDispatcher;
 
 /*
  * This file is part of the ServerBundle package.
@@ -25,11 +24,4 @@ interface HandlerInterface
      * @param EventDispatcher $dispatcher
      */
     function register(EventDispatcher $dispatcher);
-
-    /**
-     * @param Event $event
-     *
-     * @see EventDispatcher::notifyUntil()
-     */
-    function handle(Event $event);
 }

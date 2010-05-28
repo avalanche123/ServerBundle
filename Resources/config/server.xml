@@ -18,9 +18,9 @@
     <parameter key="server.compression" type="constant">false</parameter>
 
     <!-- (Request) Handlers -->
-    <parameter key="dir_handler.class">Bundle\ServerBundle\Handler\Http\DirHandler</parameter>
-    <parameter key="symfony_handler.class">Bundle\ServerBundle\Handler\Http\SymfonyHandler</parameter>
-    <parameter key="error404_handler.class">Bundle\ServerBundle\Handler\Http\Error404Handler</parameter>
+    <parameter key="dir_handler.class">Bundle\ServerBundle\Handler\DirHandler</parameter>
+    <parameter key="symfony_handler.class">Bundle\ServerBundle\Handler\SymfonyHandler</parameter>
+    <parameter key="error404_handler.class">Bundle\ServerBundle\Handler\Error404Handler</parameter>
 
     <!-- (Response) Filters -->
     <parameter key="compression_filter.class">Bundle\ServerBundle\Filter\Http\CompressionFilter</parameter>
