@@ -50,6 +50,10 @@ class CompressionFilter implements FilterInterface
      */
     public function filter(Event $event, $value)
     {
+        if (true !== $this->enabled) {
+            return $value;
+        }
+
         return $value;
 
         // parse headers, check which compression is available
