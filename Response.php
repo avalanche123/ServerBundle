@@ -241,7 +241,7 @@ class Response implements ResponseInterface, \Serializable
      */
     public function unserialize($serialized)
     {
-        list($this->httpVersion, $this->statusCode, $this->statusText, $headers, $this->body) = unserialize($data);
+        list($this->httpVersion, $this->statusCode, $this->statusText, $headers, $this->body) = unserialize($serialized);
 
         $this->headers->replace($headers);
     }
