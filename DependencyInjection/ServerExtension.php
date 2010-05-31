@@ -149,6 +149,14 @@ class ServerExtension extends LoaderExtension
             $configuration->setParameter('server.compression', $config['compression']);
         }
 
+        if (isset($config['timeout'])) {
+            $configuration->setParameter('server.timeout', $config['timeout']);
+        }
+
+        if (isset($config['keepalive_timeout'])) {
+            $configuration->setParameter('server.keepalive_timeout', $config['keepalive_timeout']);
+        }
+
         return $configuration;
     }
 

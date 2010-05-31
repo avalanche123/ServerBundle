@@ -61,7 +61,7 @@ class Server implements ServerInterface
             'socket_client_class'    => $clientClass,
             'socket_server_class'    => $serverClass,
             'timeout'                => 90,
-            'timeout_keepalive'      => 15
+            'keepalive_timeout'      => 15
         );
 
         // check option names
@@ -302,7 +302,7 @@ class Server implements ServerInterface
         }
 
         $class  = $this->options['socket_client_class'];
-        $client = new $class($socket, $this->options['timeout'], $this->options['timeout_keepalive']);
+        $client = new $class($socket, $this->options['timeout'], $this->options['keepalive_timeout']);
 
         // store socket
         $this->clients[$client->getId()] = $client;

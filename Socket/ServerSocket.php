@@ -4,6 +4,20 @@ namespace Bundle\ServerBundle\Socket;
 
 use Bundle\ServerBundle\Socket\Socket;
 
+/*
+ * This file is part of the ServerBundle package.
+ *
+ * (c) Pierre Minnieur <pm@pierre-minnieur.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+/**
+ * @package    ServerBundle
+ * @subpackage Socket
+ * @author     Pierre Minnieur <pm@pierre-minnieur.de>
+ */
 class ServerSocket extends Socket
 {
     protected $address;

@@ -15,6 +15,8 @@
     <parameter key="server.max_requests_per_child">1000</parameter>
     <parameter key="server.document_root">%kernel.root_dir%/../web</parameter>
     <parameter key="server.compression" type="constant">false</parameter>
+    <parameter key="server.timeout">90</parameter>
+    <parameter key="server.keepalive_timeout">15</parameter> 
 
     <!-- (Request) Handlers -->
     <parameter key="dir_handler.class">Bundle\ServerBundle\Handler\DirHandler</parameter>
@@ -72,6 +74,8 @@
         <argument key="max_clients">%server.max_clients%</argument>
         <argument key="max_requests_per_child">%server.max_requests_per_child%</argument>
         <argument key="document_root">%server.document_root%</argument>
+        <argument key="timeout">%server.timeout%</argument>
+        <argument key="keepalive_timeout">%server.keepalive_timeout%</argument>
         <argument key="socket_client_class">Bundle\ServerBundle\Socket\ClientSocket</argument>
         <argument key="socket_server_class">Bundle\ServerBundle\Socket\ServerSocket</argument>
       </argument>

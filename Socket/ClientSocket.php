@@ -8,15 +8,27 @@ use Bundle\ServerBundle\Socket\Socket,
     Symfony\Foundation\Kernel,
     Bundle\ServerBundle\Bundle;
 
+/*
+ * This file is part of the ServerBundle package.
+ *
+ * (c) Pierre Minnieur <pm@pierre-minnieur.de>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
+/**
+ * @package    ServerBundle
+ * @subpackage Socket
+ * @author     Pierre Minnieur <pm@pierre-minnieur.de>
+ */
 class ClientSocket extends Socket
 {
     protected $accepted;
     protected $keepAlive;
-    protected $lastAction;
-
-    protected $timeout;
     protected $keepAliveTimeout;
+    protected $lastAction;
+    protected $timeout;
 
     protected $request;
     protected $response;
@@ -31,13 +43,11 @@ class ClientSocket extends Socket
         $this->request  = null;
         $this->response = null;
 
-        // connection keep alive
-        $this->accepted   = time();
-        $this->keepAlive  = false;
-        $this->lastAction = $this->accepted;
-
-        $this->timeout = $timeout;
+        $this->timeout          = $timeout;
         $this->keepAliveTimeout = $keepAliveTimeout;
+        $this->keepAlive        = false;
+        $this->accepted         = time();
+        $this->lastAction       = $this->accepted;
 
         $this->setTimeout($this->timeout);
     }
@@ -87,8 +97,6 @@ class ClientSocket extends Socket
 
     /**
      * @param HttpMessage $message
-     *
-     * @throws \InvalidArgumentException If there is no Response to send
      */
     public function sendResponse(Response $response = null)
     {
@@ -115,6 +123,7 @@ class ClientSocket extends Socket
         // Content-MD5 integrity check
         $response->setHeader('Content-MD5', md5($response->getBody()));
 
+        // Server and Via header
         $response->setHeader('Server', 'Symfony '.Kernel::VERSION);
         $response->setHeader('Via', 'ServerBundle '.Bundle::VERSION);
 
