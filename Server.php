@@ -91,7 +91,7 @@ class Server implements ServerInterface
         }
 
         // validate port number
-        if ($this->options['port'] > 65535) {
+        if ($this->options['port'] < 0 || $this->options['port'] > 65535) {
             throw new \InvalidArgumentException('The port number must range from 0 to 65535');
         }
 
