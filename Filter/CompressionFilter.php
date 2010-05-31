@@ -4,7 +4,8 @@ namespace Bundle\ServerBundle\Filter;
 
 use Bundle\ServerBundle\Filter\FilterInterface,
     Symfony\Components\EventDispatcher\EventDispatcher,
-    Symfony\Components\EventDispatcher\Event;
+    Symfony\Components\EventDispatcher\Event,
+    Bundle\ServerBundle\ResponseInterface;
 
 /*
  * This file is part of the ServerBundle package.
@@ -38,7 +39,9 @@ class CompressionFilter implements FilterInterface
      */
     public function register(EventDispatcher $dispatcher)
     {
-        $dispatcher->connect('server.response', array($this, 'filter'));
+        if (true === $this->enabled) {
+            $dispatcher->connect('server.response', array($this, 'filter'));
+        }
     }
 
     /**
@@ -48,13 +51,11 @@ class CompressionFilter implements FilterInterface
      *
      * @see EventDispatcher::filter()
      */
-    public function filter(Event $event, $value)
+    public function filter(Event $event, ResponseInterface $response)
     {
-        if (true !== $this->enabled) {
-            return $value;
-        }
+        // $request = $event->getSubject();
 
-        return $value;
+        return $response;
 
         // parse headers, check which compression is available
 

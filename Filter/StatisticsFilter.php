@@ -4,7 +4,8 @@ namespace Bundle\ServerBundle\Filter;
 
 use Bundle\ServerBundle\Filter\FilterInterface,
     Symfony\Components\EventDispatcher\EventDispatcher,
-    Symfony\Components\EventDispatcher\Event;
+    Symfony\Components\EventDispatcher\Event,
+    Bundle\ServerBundle\ResponseInterface;
 
 /*
  * This file is part of the ServerBundle package.
@@ -33,14 +34,14 @@ class StatisticsFilter implements FilterInterface
 
     /**
      * @param Event $event
-     * @param mixed $value
+     * @param ResponseInterface $response
      * @return mixed
      *
      * @see EventDispatcher::filter()
      */
-    public function filter(Event $event, $value)
+    public function filter(Event $event, ResponseInterface $response)
     {
-        return $value;
+        return $response;
 
         // collect statistics about the response, because it will be send ...
         // ... after that filter immediately. Dunno where to store that stats!
