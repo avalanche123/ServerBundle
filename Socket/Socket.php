@@ -35,7 +35,7 @@ abstract class Socket implements SocketInterface
             $this->connected = false;
         } else {
             if (!is_resource($socket)) {
-                throw new \Exception('Socket must be a valid resource');
+                throw new \InvalidArgumentException('Socket must be a valid resource');
             }
 
             $this->socket    = $socket;
@@ -53,6 +53,14 @@ abstract class Socket implements SocketInterface
     public function __destruct()
     {
         $this->disconnect();
+    }
+
+    /**
+     * @return integer
+     */
+    public function getId()
+    {
+        return (integer) $this->socket;
     }
 
     /**

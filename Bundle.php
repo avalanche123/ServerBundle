@@ -23,6 +23,8 @@ use Symfony\Foundation\Bundle\Bundle as BaseBundle,
  */
 class Bundle extends BaseBundle
 {
+    const VERSION = '1.0.0-DEV';
+
     /**
      * @param ContainerInterface $container
      */

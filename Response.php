@@ -177,7 +177,7 @@ class Response implements ResponseInterface, \Serializable
     /**
      * @param string $body
      */
-    public function getBody($body)
+    public function getBody()
     {
         return $this->body;
     }

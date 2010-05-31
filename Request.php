@@ -118,6 +118,15 @@ class Request implements RequestInterface, \Serializable
     }
 
     /**
+     * @param string $name
+     * @return boolean
+     */
+    public function hasHeader($name)
+    {
+        return $this->headers->has($name);
+    }
+
+    /**
      * @return string
      */
     public function getBody()

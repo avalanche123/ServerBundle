@@ -37,8 +37,6 @@ class Server implements ServerInterface
      * @param array $options (optional)
      *
      * @throws \InvalidArgumentException When an unsupported option is provided
-     * @throws \InvalidArgumentException If the address is not a valid IP address
-     * @throws \InvalidArgumentException If the port number is not in range from 0 to 65535
      * @throws \InvalidArgumentException If an invalid socket client class is provided
      * @throws \InvalidArgumentException If an invalid socket server class is provided
      * @throws \InvalidArgumentException If an invalid socket server client class is provided
@@ -50,19 +48,20 @@ class Server implements ServerInterface
         $this->servers    = array();
         $this->shutdown   = false;
 
-        $clientClass       = 'Bundle\\ServerBundle\\Socket\\Http\\ClientSocket';
-        $serverClass       = 'Bundle\\ServerBundle\\Socket\\Http\\ServerSocket';
-        $serverClientClass = 'Bundle\\ServerBundle\\Socket\\Http\\ServerClientSocket';
+        $clientClass       = 'Bundle\\ServerBundle\\Socket\\ClientSocket';
+        $serverClass       = 'Bundle\\ServerBundle\\Socket\\ServerSocket';
 
+        // @see Resources/config/server.xml
         $this->options = array(
-            'address'                    => '*',
-            'port'                       => 1962,
-            'max_clients'                => 100,
-            'max_requests_per_child'     => 1000,
-            'document_root'              => null,
-            'socket_client_class'        => $clientClass,
-            'socket_server_class'        => $serverClass,
-            'socket_server_client_class' => $serverClientClass
+            'address'                => '*',
+            'port'                   => 1962,
+            'max_clients'            => 100,
+            'max_requests_per_child' => 1000,
+            'document_root'          => null,
+            'socket_client_class'    => $clientClass,
+            'socket_server_class'    => $serverClass,
+            'timeout'                => 90,
+            'timeout_keepalive'      => 15
         );
 
         // check option names
@@ -72,29 +71,6 @@ class Server implements ServerInterface
 
         $this->options = array_merge($this->options, $options);
 
-        // protocol must be TCP
-        $this->options['protocol'] = 'tcp';
-
-        // convert wildcard '*' to '0.0.0.0'
-        if ('*' == $this->options['address']) {
-            $this->options['address'] = '0.0.0.0';
-        }
-
-        // validate [IPv4/6] address
-        if (false === filter_var($this->options['address'], FILTER_VALIDATE_IP)) {
-            throw new \InvalidArgumentException(sprintf('The address "%s" is not a valid IP address', $this->options['address']));
-        }
-
-        // cover IPv6 address in braces
-        if (true === filter_var($this->options['address'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            $this->options['address'] = sprintf('[%s]', $this->options['address']);
-        }
-
-        // validate port number
-        if (0 > $this->options['port'] || 65535 < $this->options['port']) {
-            throw new \InvalidArgumentException('The port number must range from 0 to 65535');
-        }
-
         // check socket client class
         if (!$this->checkSocketClass($clientClass, $this->options['socket_client_class'])) {
             throw new \InvalidArgumentException(sprintf('Client socket class must be a sublass of "%s"', $clientClass));
@@ -103,11 +79,6 @@ class Server implements ServerInterface
         // check socket server class
         if (!$this->checkSocketClass($serverClass, $this->options['socket_server_class'])) {
             throw new \InvalidArgumentException(sprintf('Server socket class must be a sublass of "%s"', $serverClass));
-        }
-
-        // check socket server client class
-        if (!$this->checkSocketClass($serverClientClass, $this->options['socket_server_client_class'])) {
-            throw new \InvalidArgumentException(sprintf('Server client socket class must be a sublass of "%s"', $serverClientClass));
         }
     }
 
@@ -141,6 +112,8 @@ class Server implements ServerInterface
 
     /**
      * @return boolean
+     *
+     * @throws \RuntimeException If Request was not handled
      */
     public function start()
     {
@@ -169,56 +142,66 @@ class Server implements ServerInterface
             !$this->reachedMaxRequestsPerChild($requests) &&                // max requests?
             false !== ($events = @stream_select($read, $write, $except, 0)) // socket alive?
         ) {
+            // sockets changed
             if ($events > 0) {
+                // process read set
                 foreach ($read as $socket) {
+                    // accept client connection
                     if ($this->isServerSocket($socket)) {
                         $server = $this->findSocket($socket);
-                        $client = $server->accept();
-
-                        // store client socket
-                        $this->clients[(integer) $client->getSocket()] = $client;
+                        $client = $this->createClientSocket($server->accept());
 
                         // @TODO max clients check
                     }
 
+                    // read client data
                     if ($this->isClientSocket($socket)) {
                         $client = $this->findSocket($socket);
 
                         /** @var $request Request */
                         $request = $client->readRequest();
 
+                        // Request read?
                         if (!$request instanceof Request) {
                             // @TODO disconnect client?
                             continue;
                         }
 
-                        // handle request
-                        $event = $this->dispatcher->notifyUntil(new Event($request, 'server.request'));
+                        /** @var $event Event */
+                        $event = $this->dispatcher->notifyUntil(
+                            new Event($request, 'server.request')
+                        );
 
-                        if ($event->isProcessed()) {
-                            /** @var $response Response */
-                            $response = $event->getReturnValue();
-
-                            // filter response
-                            $event = $this->dispatcher->filter(new Event($request, 'server.response'), $response);
-
-                            /** @var $response Response */
-                            $response = $event->getReturnValue();
-
-                            // @TODO add response checks?
-
-                            $client->sendResponse($response);
-                        } else {
-                            // @TODO what to do if it 's not processed?
-                            //       actually this should never happen.
+                        // Request handled?
+                        if (!$event->isProcessed()) {
+                            throw new \RuntimeException('Request is not handled');
                         }
+
+                        /** @var $response Response */
+                        $response = $event->getReturnValue();
+
+                        /** @var $event Event */
+                        $event = $this->dispatcher->filter(
+                            new Event($request, 'server.response'),
+                            $response
+                        );
+
+                        /** @var $response Response */
+                        $response = $event->getReturnValue();
+
+                        // @TODO add response checks?
+
+                        // send Response
+                        $client->sendResponse($response);
 
                         // @TODO is that correct, here?
                         $requests++;
                     }
                 }
 
+                // process write set
                 foreach ($write as $socket) {
+                    // send client data
                     if ($this->isClientSocket($socket)) {
                         $client = $this->findSocket($socket);
 
@@ -234,10 +217,12 @@ class Server implements ServerInterface
                     }
                 }
 
+                // process except set
                 foreach($except as $socket) {
+                    // close client connection
                     if ($this->isClientSocket($socket)) {
                         $client = $this->findSocket($socket);
-                        $id     = (integer) $client->getSocket();
+                        $id     = $client->getId();
 
                         $client->disconnect();
 
@@ -306,16 +291,21 @@ class Server implements ServerInterface
     }
 
     /**
+     * @param resource $socket
+     *
      * @return Bundle\ServerBundle\Socket\SocketInterface
      */
-    protected function createClientSocket()
+    protected function createClientSocket($socket)
     {
+        if (!is_resource($socket)) {
+            throw new \InvalidArgumentException('Socket must be a valid resource');
+        }
+
         $class  = $this->options['socket_client_class'];
-        $client = new $class($this->options['protocol'], $this->options['address'], $this->options['port']);
-        $client->connect();
+        $client = new $class($socket, $this->options['timeout'], $this->options['timeout_keepalive']);
 
         // store socket
-        $this->clients[(integer) $client->getSocket()] = $client;
+        $this->clients[$client->getId()] = $client;
 
         return $client;
     }
@@ -326,11 +316,11 @@ class Server implements ServerInterface
     protected function createServerSocket()
     {
         $class  = $this->options['socket_server_class'];
-        $server = new $class($this->options['socket_server_client_class'], $this->options['protocol'], $this->options['address'], $this->options['port']);
+        $server = new $class($this->options['address'], $this->options['port']);
         $server->connect();
 
         // store socket
-        $this->servers[(integer) $server->getSocket()] = $server;
+        $this->servers[$server->getId()] = $server;
 
         return $server;
     }
@@ -339,12 +329,12 @@ class Server implements ServerInterface
      * @param resource $socket
      * @return boolean
      *
-     * @throws \Exception If socket is not a valid resource
+     * @throws \InvalidArgumentException If socket is not a valid resource
      */
     protected function isClientSocket($socket)
     {
         if (!is_resource($socket)) {
-            throw new \Exception('Socket must be a valid resource');
+            throw new \InvalidArgumentException('Socket must be a valid resource');
         }
 
         if (isset($this->clients[(integer) $socket])) {

@@ -64,7 +64,7 @@
       <argument type="service" id="service_container" />
     </service>
 
-    <service id="server" class="%server.class%" shared="false">
+    <service id="server" class="%server.class%">
       <argument type="service" id="server.event_dispatcher" />
       <argument type="collection">
         <argument key="address">%server.address%</argument>
@@ -72,9 +72,8 @@
         <argument key="max_clients">%server.max_clients%</argument>
         <argument key="max_requests_per_child">%server.max_requests_per_child%</argument>
         <argument key="document_root">%server.document_root%</argument>
-        <argument key="socket_client_class">Bundle\ServerBundle\Socket\Http\ClientSocket</argument>
-        <argument key="socket_server_class">Bundle\ServerBundle\Socket\Http\ServerSocket</argument>
-        <argument key="socket_server_client_class">Bundle\ServerBundle\Socket\Http\ServerClientSocket</argument>
+        <argument key="socket_client_class">Bundle\ServerBundle\Socket\ClientSocket</argument>
+        <argument key="socket_server_class">Bundle\ServerBundle\Socket\ServerSocket</argument>
       </argument>
     </service>
   </services>
