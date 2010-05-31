@@ -44,6 +44,11 @@ interface RequestInterface
     function getHeaders();
 
     /**
+     * @return boolean
+     */
+    function hasHeader($name);
+
+    /**
      * @return string
      */
     function getBody();
