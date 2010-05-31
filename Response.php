@@ -45,7 +45,7 @@ class Response implements ResponseInterface, \Serializable
         $this->body        = $body;
 
         if (count($headers) > 0) {
-            $this->headers->setHeaders($headers);
+            $this->headers->replace($headers);
         }
     }
 
