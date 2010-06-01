@@ -63,8 +63,6 @@ class Daemon implements DaemonInterface
         }
 
         $this->server  = $server;
-        $this->server->setDaemon($this);
-
         $this->isChild = false;
         $this->pidFile = $pidFile;
         $this->user    = $user;
@@ -119,6 +117,21 @@ class Daemon implements DaemonInterface
     }
 
     /**
+     * @param string $style
+     * @param string $message
+     */
+    protected function output($style, $message)
+    {
+        if (null !== $this->output) {
+            $this->output->writeln(sprintf('[%s] <info>%s</info> %s',
+                date('r'),
+                strtoupper($style),
+                $message
+            ));
+        }
+    }
+
+    /**
      * @param integer $signo
      */
     public function signalHandler($signo)
@@ -138,43 +151,55 @@ class Daemon implements DaemonInterface
      */
     public function start()
     {
-        if ($pid = $this->readPidFile()) {
-            throw new \RuntimeException(sprintf('Daemon already started with pid "%d")', $pid));
-        }
-
-        set_time_limit(0);
-
-        // @see http://www.php.net/manual/en/function.pcntl-fork.php#41150
-        @ob_end_flush();
-
-        pcntl_signal(SIGCHLD, SIG_IGN);
-
-        $pid = @pcntl_fork();
-
-        if ($pid === -1) {
-            throw new \RuntimeException('Forking process failed');
-        }
-
-        if ($pid === 0) {
-            $this->isChild = true;
-
-            sleep(1);
-
-            if (null !== $this->user) {
-                posix_setuid($this->user);
+        try {
+            if ($pid = $this->readPidFile()) {
+                throw new \RuntimeException(sprintf('Daemon already started with pid "%d"', $pid));
             }
 
-            if (null !== $this->group) {
-                posix_setgid($this->group);
+            set_time_limit(0);
+
+            // @see http://www.php.net/manual/en/function.pcntl-fork.php#41150
+            @ob_end_flush();
+
+            pcntl_signal(SIGCHLD, SIG_IGN);
+
+            $pid = @pcntl_fork();
+
+            if ($pid === -1) {
+                throw new \RuntimeException('Forking process failed');
             }
 
-            $this->writePidFile();
+            if ($pid === 0) {
+                $this->isChild = true;
 
-            $this->server->start();
+                sleep(1);
 
-            $this->removePidFile();
+                if (null !== $this->user) {
+                    posix_setuid($this->user);
+                }
 
-            exit(0);
+                if (null !== $this->group) {
+                    posix_setgid($this->group);
+                }
+
+                $this->writePidFile();
+
+                $this->server->start();
+
+                $this->removePidFile();
+
+                exit(0);
+            }
+
+            $this->output('info', sprintf('   Daemon#start(): pid=%s',
+                getmypid()
+            ));
+        } catch (\Exception $e) {
+            $this->output('error', sprintf('  Daemon#start(): failed - <error>%s</error>',
+                $e->getMessage()
+            ));
+
+            return false;
         }
 
         return true;
@@ -197,6 +222,10 @@ class Daemon implements DaemonInterface
             $this->removePidFile();
         }
 
+        $this->output('info', sprintf('   Daemon#stop(): %s',
+            true === $success ? 'okay' : 'failed'
+        ));
+
         return $success;
     }
 
@@ -216,6 +245,14 @@ class Daemon implements DaemonInterface
     public function isChild()
     {
       return $this->isChild;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getPid()
+    {
+        return getmypid();
     }
 
     /**

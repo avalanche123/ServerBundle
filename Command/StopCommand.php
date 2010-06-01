@@ -35,10 +35,6 @@ class StopCommand extends DaemonCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        if ($this->daemon->stop()) {
-          $output->writeln('server stopped');
-        } else {
-          $output->writeln('cannot stop server');
-        }
+        $this->daemon->stop();
     }
 }

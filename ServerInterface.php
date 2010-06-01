@@ -2,7 +2,8 @@
 
 namespace Bundle\ServerBundle;
 
-use Bundle\ServerBundle\DaemonInterface;
+use Bundle\ServerBundle\DaemonInterface,
+    Symfony\Components\Console\Output\OutputInterface;
 
 /*
  * This file is part of the ServerBundle package.
@@ -35,7 +36,22 @@ interface ServerInterface
     function shutdown();
 
     /**
+     * @return DaemonInterface
+     */
+    function getDaemon();
+
+    /**
      * @param DaemonInterface $daemon
      */
     function setDaemon(DaemonInterface $daemon);
+
+    /**
+     * @return OutputInterface
+     */
+    function getOutput();
+
+    /**
+     * @param OutputInterface $output
+     */
+    function setOutput(OutputInterface $output);
 }

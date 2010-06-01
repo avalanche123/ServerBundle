@@ -41,6 +41,11 @@ interface DaemonInterface
     function isChild();
 
     /**
+     * @return integer
+     */
+    function getPid();
+
+    /**
      * @return OutputInterface
      */
     function getOutput();

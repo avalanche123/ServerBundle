@@ -5,9 +5,12 @@ namespace Bundle\ServerBundle;
 use Bundle\ServerBundle\ServerInterface,
     Bundle\ServerBundle\EventDispatcher,
     Bundle\ServerBundle\DaemonInterface,
+    Symfony\Components\Console\Output\OutputInterface,
     Bundle\ServerBundle\Request,
     Bundle\ServerBundle\Response,
-    Symfony\Components\EventDispatcher\Event;
+    Symfony\Components\EventDispatcher\Event,
+    Symfony\Foundation\Kernel,
+    Bundle\ServerBundle\Bundle;
 
 /*
  * This file is part of the ServerBundle package.
@@ -26,6 +29,7 @@ use Bundle\ServerBundle\ServerInterface,
 class Server implements ServerInterface
 {
     protected $daemon;
+    protected $output;
     protected $dispatcher;
     protected $options;
     protected $clients;
@@ -43,6 +47,8 @@ class Server implements ServerInterface
      */
     public function __construct(EventDispatcher $dispatcher, array $options = array())
     {
+        $this->daemon     = null;
+        $this->output     = null;
         $this->dispatcher = $dispatcher;
         $this->clients    = array();
         $this->servers    = array();
@@ -53,6 +59,10 @@ class Server implements ServerInterface
 
         // @see Resources/config/server.xml
         $this->options = array(
+            'environment'            => 'dev',
+            'debug'                  => true,
+            'kernel_environment'     => 'prod',
+            'kernel_debug'           => false,
             'address'                => '*',
             'port'                   => 1962,
             'max_clients'            => 100,
@@ -99,6 +109,37 @@ class Server implements ServerInterface
     }
 
     /**
+     * @return OutputInterface
+     */
+    public function getOutput()
+    {
+        return $this->output;
+    }
+
+    /**
+     * @param OutputInterface $output
+     */
+    public function setOutput(OutputInterface $output)
+    {
+        $this->output = $output;
+    }
+
+    /**
+     * @param string $style
+     * @param string $message
+     */
+    protected function output($style, $message)
+    {
+        if (null !== $this->output) {
+            $this->output->writeln(sprintf('[%s] <info>%s</info> %s',
+                date('r'),
+                strtoupper($style),
+                $message
+            ));
+        }
+    }
+
+    /**
      * @param string $expected
      * @param string $provided
      * @return boolean
@@ -117,6 +158,24 @@ class Server implements ServerInterface
      */
     public function start()
     {
+        // Symfony & ServerBundle informations
+        $this->output('info', sprintf('    Symfony %s (%s, %s), ServerBundle %s (%s, %s)',
+            Kernel::VERSION, $this->options['environment'],
+            true === $this->options['debug'] ? 'debug' : 'non-debug',
+            Bundle::VERSION, $this->options['kernel_environment'],
+            true === $this->options['kernel_debug'] ? 'debug' : 'non-debug'
+        ));
+
+        // php informations
+        $this->output('info', sprintf('    PHP %s [%s] %s pecl_http',
+            phpversion(), PHP_SAPI, true === extension_loaded('pecl_http') ? 'with' : 'without'
+        ));
+
+        // start options
+        $this->output('info', sprintf('    Server#start(): pid=%d, address=%s, port=%d',
+            getmypid(), $this->options['address'], $this->options['port']
+        ));
+
         $timer = time();
 
         // create server socket
@@ -133,7 +192,7 @@ class Server implements ServerInterface
         $requests = 0;
 
         // disable max_requests_per_child in non-daemon mode
-        if (null === $this->getDaemon() || !$this->getDaemon()->isChild()) {
+        if (null === $this->daemon || !$this->daemon->isChild()) {
             $this->options['max_requests_per_child'] = 0;
         }
 
@@ -167,6 +226,12 @@ class Server implements ServerInterface
                             continue;
                         }
 
+                        // Request informations
+                        $this->output('request', sprintf(' %s %s',
+                            $request->getRequestMethod(),
+                            $request->getRequestUrl()
+                        ));
+
                         /** @var $event Event */
                         $event = $this->dispatcher->notifyUntil(
                             new Event($request, 'server.request')
@@ -192,7 +257,14 @@ class Server implements ServerInterface
                         // @TODO add response checks?
 
                         // send Response
-                        $client->sendResponse($response);
+                        $send = $client->sendResponse($response);
+
+                        // Response informations
+                        $this->output('response', sprintf('%d %s (%d bytes)',
+                            $response->getStatusCode(),
+                            $response->getStatusText(),
+                            $send
+                        ));
 
                         // @TODO is that correct, here?
                         $requests++;
@@ -242,6 +314,11 @@ class Server implements ServerInterface
                 $timer = time();
             }
 
+            // only once a minute
+            if (time() - $timer > 60) {
+
+            }
+
             $this->cleanSockets();
 
             // override select sets
@@ -265,6 +342,8 @@ class Server implements ServerInterface
         foreach ($this->servers as $server) {
             $server->disconnect();
         }
+
+        $this->output('info', '    Server#stop(): okay');
 
         return true;
     }

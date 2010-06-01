@@ -59,16 +59,20 @@ class StartCommand extends DaemonCommand
          *   3) server.xml
          */
 
+        // get Server service
+        $server = $this->container->getServerService();
+
+        // start Server
         if (!$input->getOption('daemonize')) {
-            $output->writeln('server started');
+            $server->setOutput($output);
 
-            return $this->container->getServerService()->start();
+            return $server->start();
         }
 
-        if ($this->daemon->start()) {
-            $output->writeln('server started');
-        } else {
-            $output->writeln('cannot start server');
-        }
+        // store Daemon service
+        $server->setDaemon($this->daemon);
+
+        // start Daemon
+        $this->daemon->start();
     }
 }
