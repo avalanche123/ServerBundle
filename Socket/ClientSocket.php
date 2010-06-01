@@ -26,35 +26,84 @@ class ClientSocket extends Socket
 {
     protected $accepted;
     protected $keepAlive;
-    protected $keepAliveTimeout;
     protected $lastAction;
-    protected $timeout;
-
+    protected $options;
     protected $request;
     protected $response;
 
     /**
      * @param resource $socket
      */
-    public function __construct($socket, $timeout = 90, $keepAliveTimeout = 15)
+    public function __construct($socket, array $options = array())
     {
         parent::__construct($socket);
 
-        $this->request  = null;
-        $this->response = null;
+        $this->request    = null;
+        $this->response   = null;
+        $this->accepted   = time();
+        $this->lastAction = $this->accepted;
 
-        $this->timeout          = $timeout;
-        $this->keepAliveTimeout = $keepAliveTimeout;
-        $this->keepAlive        = false;
-        $this->accepted         = time();
-        $this->lastAction       = $this->accepted;
+        // @see Resources/config/server.xml
+        $this->options = array(
+            'address'           => '*',
+            'port'              => 1962,
+            'timeout'           => 90,
+            'keepalive_timeout' => 15
+        );
 
-        $this->setTimeout($this->timeout);
+        // check option names
+        if ($diff = array_diff(array_keys($options), array_keys($this->options))) {
+            throw new \InvalidArgumentException(sprintf('The Server does not support the following options: \'%s\'.', implode('\', \'', $diff)));
+        }
+
+        $this->options = array_merge($this->options, $options);
+
+        // set timeout
+        $this->setTimeout($this->options['timeout']);
     }
+
+    /**
+     * @return boolean
+     *
+     * @throws \InvalidArgumentException If address is not set
+     * @throws \InvalidArgumentException If port is not set
+     * @throws \RuntimeException If socket cannot be created
+     */
+    public function connect($address = null, $port = null)
+    {
+        if (null !== $address) {
+            $this->setAddress($address);
+        }
+
+        if (null !== $port) {
+            $this->setPort($port);
+        }
+
+        if (null === $this->address) {
+            throw new \InvalidArgumentException('Address must be set');
+        }
+
+        if (null === $this->port) {
+            throw new \InvalidArgumentException('Port must be set');
+        }
+
+        $this->socket = @stream_socket_client($this->getRealAddress(), $errno, $errstr, STREAM_SERVER_BIND | STREAM_SERVER_LISTEN, $this->context);
+
+        if (false === $this->socket) {
+            throw new \RuntimeException(sprintf('Cannot create socket: %s', $errstr), $errno);
+        }
+
+        $this->connected = true;
+        $this->setBlocking(false);
+        $this->setTimeout($this->options['timeout']);
+
+        return true;
+    }
+
     /**
      * @return Request
      */
-    public function readRequest()
+    public function readResponse()
     {
         if (null !== $this->request) {
             return $this->request;
@@ -96,7 +145,7 @@ class ClientSocket extends Socket
     }
 
     /**
-     * @param HttpMessage $message
+     * @param Response $response
      */
     public function sendResponse(Response $response = null)
     {
@@ -114,7 +163,7 @@ class ClientSocket extends Socket
         if (true === $this->keepAlive) {
             $response->setHeader('Connection', 'Keep-Alive');
             $response->setHeader('Keep-Alive', sprintf('timeout=%d max=%d',
-                $this->keepAliveTimeout, $this->timeout
+                $this->options['keepalive_timeout'], $this->options['timeout']
             ));
         } else {
             $response->setHeader('Connection', 'close');
@@ -131,7 +180,7 @@ class ClientSocket extends Socket
         $this->response = null;
 
         // write to socket
-        return $this->write($response->toString());
+        return parent::write($response->toString());
     }
 
     /**
@@ -149,7 +198,7 @@ class ClientSocket extends Socket
         $idle  = time() - $this->lastAction;
         $total = time() - $this->accepted;
 
-        if ($total > $this->timeout || $idle > $this->keepAliveTimeout) {
+        if ($total > $this->options['timeout'] || $idle > $this->options['keepalive_timeout']) {
             $this->disconnect();
         }
     }

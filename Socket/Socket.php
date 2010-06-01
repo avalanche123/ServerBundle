@@ -24,6 +24,10 @@ abstract class Socket implements SocketInterface
     protected $socket;
     protected $connected;
     protected $blocked;
+    protected $address;
+    protected $port;
+    protected $read;
+    protected $write;
 
     /**
      * @return void
@@ -53,6 +57,70 @@ abstract class Socket implements SocketInterface
     public function __destruct()
     {
         $this->disconnect();
+    }
+
+    /**
+     * @return string
+     */
+    public function getAddress()
+    {
+        return $this->address;
+    }
+
+    /**
+     * @param $address
+     *
+     * @throws \InvalidArgumentException If the address is not a valid IP address
+     */
+    public function setAddress($address)
+    {
+        $this->address = $address;
+
+        // convert wildcard address
+        if ('*' == $this->address) {
+            $this->address = '0.0.0.0';
+        }
+
+        // validate [IPv4/6] address
+        if (false === filter_var($this->address, FILTER_VALIDATE_IP)) {
+            throw new \InvalidArgumentException(sprintf('The address "%s" is not a valid IP address', $this->address));
+        }
+
+        // cover IPv6 address in braces
+        if (true === filter_var($this->address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $this->address = sprintf('[%s]', $this->address);
+        }
+    }
+
+    /**
+     * @return integer
+     */
+    public function getPort()
+    {
+        return $this->port;
+    }
+
+    /**
+     * @param integer $port
+     *
+     * @throws \InvalidArgumentException If the port number is not in range from 0 to 65535
+     */
+    public function setPort($port)
+    {
+        $this->port = $port;
+
+        // validate port number
+        if (0 > $this->port || 65535 < $this->port) {
+            throw new \InvalidArgumentException('The port number must range from 0 to 65535');
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getRealAddress()
+    {
+        return sprintf('tcp://%s:%d', $this->address, $this->port);
     }
 
     /**
@@ -149,7 +217,7 @@ abstract class Socket implements SocketInterface
 
     /**
      * @param string $wrapper
-     * @param string$option
+     * @param string $option
      * @param mixed $value
      * @return boolean
      */

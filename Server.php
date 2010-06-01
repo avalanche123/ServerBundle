@@ -159,7 +159,7 @@ class Server implements ServerInterface
                         $client = $this->findSocket($socket);
 
                         /** @var $request Request */
-                        $request = $client->readRequest();
+                        $request = $client->readResponse();
 
                         // Request read?
                         if (!$request instanceof Request) {
@@ -302,7 +302,10 @@ class Server implements ServerInterface
         }
 
         $class  = $this->options['socket_client_class'];
-        $client = new $class($socket, $this->options['timeout'], $this->options['keepalive_timeout']);
+        $client = new $class($socket, array(
+            'timeout'           => $this->options['timeout'],
+            'keepalive_timeout' => $this->options['keepalive_timeout']
+        ));
 
         // store socket
         $this->clients[$client->getId()] = $client;
@@ -316,8 +319,8 @@ class Server implements ServerInterface
     protected function createServerSocket()
     {
         $class  = $this->options['socket_server_class'];
-        $server = new $class($this->options['address'], $this->options['port']);
-        $server->connect();
+        $server = new $class();
+        $server->connect($this->options['address'], $this->options['port']);
 
         // store socket
         $this->servers[$server->getId()] = $server;
