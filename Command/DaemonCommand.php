@@ -32,5 +32,6 @@ abstract class DaemonCommand extends Command
         parent::initialize($input, $output);
 
         $this->daemon = $this->container->getDaemonService();
+        $this->daemon->setOutput($output);
     }
 }

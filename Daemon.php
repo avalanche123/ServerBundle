@@ -3,7 +3,8 @@
 namespace Bundle\ServerBundle;
 
 use Bundle\ServerBundle\DaemonInterface,
-    Bundle\ServerBundle\ServerInterface;
+    Bundle\ServerBundle\ServerInterface,
+    Symfony\Components\Console\Output\OutputInterface;
 
 /*
  * This file is part of the ServerBundle package.
@@ -21,6 +22,7 @@ use Bundle\ServerBundle\DaemonInterface,
  */
 class Daemon implements DaemonInterface
 {
+    protected $output;
     protected $server;
     protected $isChild;
     protected $pidFile;
@@ -98,6 +100,22 @@ class Daemon implements DaemonInterface
 
         // pcntl signal handlers
         pcntl_signal(SIGTERM, array($this, 'signalHandler'));
+    }
+
+    /**
+     * @return OutputInterface
+     */
+    public function getOutput()
+    {
+        return $this->output;
+    }
+
+    /**
+     * @param OutputInterface $output
+     */
+    public function setOutput(OutputInterface $output)
+    {
+        $this->output = $output;
     }
 
     /**

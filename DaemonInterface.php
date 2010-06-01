@@ -2,6 +2,8 @@
 
 namespace Bundle\ServerBundle;
 
+use Symfony\Components\Console\Output\OutputInterface;
+
 /*
  * This file is part of the ServerBundle package.
  *
@@ -37,4 +39,14 @@ interface DaemonInterface
      * @return boolean
      */
     function isChild();
+
+    /**
+     * @return OutputInterface
+     */
+    function getOutput();
+
+    /**
+     * @param OutputInterface $output
+     */
+    function setOutput(OutputInterface $output);
 }
