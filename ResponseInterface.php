@@ -54,4 +54,17 @@ interface ResponseInterface
      * @return string
      */
     function toString();
+
+    // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+    function isInvalid();
+    function isInformational();
+    function isSuccessful();
+    function isRedirection();
+    function isClientError();
+    function isServerError();
+    function isOk();
+    function isForbidden();
+    function isNotFound();
+    function isRedirect();
+    function isEmpty();
 }

@@ -245,4 +245,60 @@ class Response implements ResponseInterface, \Serializable
 
         $this->headers->replace($headers);
     }
+
+    // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+    public function isInvalid()
+    {
+        return $this->statusCode < 100 || $this->statusCode >= 600;
+    }
+
+    public function isInformational()
+    {
+        return $this->statusCode >= 100 && $this->statusCode < 200;
+    }
+
+    public function isSuccessful()
+    {
+        return $this->statusCode >= 200 && $this->statusCode < 300;
+    }
+
+    public function isRedirection()
+    {
+        return $this->statusCode >= 300 && $this->statusCode < 400;
+    }
+
+    public function isClientError()
+    {
+        return $this->statusCode >= 400 && $this->statusCode < 500;
+    }
+
+    public function isServerError()
+    {
+        return $this->statusCode >= 500 && $this->statusCode < 600;
+    }
+
+    public function isOk()
+    {
+        return 200 === $this->statusCode;
+    }
+
+    public function isForbidden()
+    {
+        return 403 === $this->statusCode;
+    }
+
+    public function isNotFound()
+    {
+        return 404 === $this->statusCode;
+    }
+
+    public function isRedirect()
+    {
+        return in_array($this->statusCode, array(301, 302, 303, 307));
+    }
+
+    public function isEmpty()
+    {
+        return in_array($this->statusCode, array(201, 204, 304));
+    }
 }
