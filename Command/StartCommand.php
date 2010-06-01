@@ -64,7 +64,7 @@ class StartCommand extends DaemonCommand
 
         // start Server
         if (!$input->getOption('daemonize')) {
-            $server->setOutput($output);
+            $server->setConsole($this->console);
 
             return $server->start();
         }

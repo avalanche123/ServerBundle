@@ -4,7 +4,8 @@ namespace Bundle\ServerBundle\Command;
 
 use Symfony\Components\Console\Input\InputInterface,
     Symfony\Components\Console\Output\OutputInterface,
-    Bundle\ServerBundle\Command\Command;
+    Bundle\ServerBundle\Command\Command,
+    Bundle\ServerBundle\Console;
 
 /*
  * This file is part of the ServerBundle package.
@@ -32,6 +33,8 @@ abstract class DaemonCommand extends Command
         parent::initialize($input, $output);
 
         $this->daemon = $this->container->getDaemonService();
-        $this->daemon->setOutput($output);
+
+        $this->console = new Console($output);
+        $this->daemon->setConsole($this->console);
     }
 }

@@ -3,7 +3,7 @@
 namespace Bundle\ServerBundle;
 
 use Bundle\ServerBundle\DaemonInterface,
-    Symfony\Components\Console\Output\OutputInterface;
+    Bundle\ServerBundle\Console;
 
 /*
  * This file is part of the ServerBundle package.
@@ -46,12 +46,12 @@ interface ServerInterface
     function setDaemon(DaemonInterface $daemon);
 
     /**
-     * @return OutputInterface
+     * @return Console
      */
-    function getOutput();
+    function getConsole();
 
     /**
-     * @param OutputInterface $output
+     * @param Console $console
      */
-    function setOutput(OutputInterface $output);
+    function setConsole(Console $console);
 }

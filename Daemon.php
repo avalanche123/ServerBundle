@@ -4,7 +4,7 @@ namespace Bundle\ServerBundle;
 
 use Bundle\ServerBundle\DaemonInterface,
     Bundle\ServerBundle\ServerInterface,
-    Symfony\Components\Console\Output\OutputInterface;
+    Bundle\ServerBundle\Console;
 
 /*
  * This file is part of the ServerBundle package.
@@ -22,7 +22,7 @@ use Bundle\ServerBundle\DaemonInterface,
  */
 class Daemon implements DaemonInterface
 {
-    protected $output;
+    protected $console;
     protected $server;
     protected $isChild;
     protected $pidFile;
@@ -62,6 +62,7 @@ class Daemon implements DaemonInterface
             throw new \RuntimeException('posix_* functions are required');
         }
 
+        $this->console = null;
         $this->server  = $server;
         $this->isChild = false;
         $this->pidFile = $pidFile;
@@ -101,33 +102,30 @@ class Daemon implements DaemonInterface
     }
 
     /**
-     * @return OutputInterface
+     * @return Console
      */
-    public function getOutput()
+    public function getConsole()
     {
-        return $this->output;
+        return $this->console;
     }
 
     /**
-     * @param OutputInterface $output
+     * @param Console $console
      */
-    public function setOutput(OutputInterface $output)
+    public function setConsole(Console $console)
     {
-        $this->output = $output;
+        $this->console = $console;
     }
 
     /**
-     * @param string $style
+     * @param string $type
      * @param string $message
+     * @param array $parameters (optional)
      */
-    protected function output($style, $message)
+    protected function logConsole($type, $message, array $parameters = array())
     {
-        if (null !== $this->output) {
-            $this->output->writeln(sprintf('[%s] <info>%s</info> %s',
-                date('r'),
-                strtoupper($style),
-                $message
-            ));
+        if (null !== $this->console && is_callable(array($this->console, $type))) {
+            call_user_func(array($this->console, $type), $message, $parameters);
         }
     }
 
@@ -191,13 +189,9 @@ class Daemon implements DaemonInterface
                 exit(0);
             }
 
-            $this->output('info', sprintf('   Daemon#start(): pid=%s',
-                getmypid()
-            ));
+            $this->logConsole('info', 'Daemon#start(): pid=%s', array(getmypid()));
         } catch (\Exception $e) {
-            $this->output('error', sprintf('  Daemon#start(): failed - <error>%s</error>',
-                $e->getMessage()
-            ));
+            $this->logConsole('error', 'Daemon#start(): %s', array($e->getMessage()));
 
             return false;
         }
@@ -222,9 +216,7 @@ class Daemon implements DaemonInterface
             $this->removePidFile();
         }
 
-        $this->output('info', sprintf('   Daemon#stop(): %s',
-            true === $success ? 'okay' : 'failed'
-        ));
+        $this->logConsole($success ? 'info' : 'error', 'Daemon#stop(): %s', array($success ? 'okay' : 'failed'));
 
         return $success;
     }

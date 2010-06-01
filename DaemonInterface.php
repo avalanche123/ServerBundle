@@ -2,7 +2,7 @@
 
 namespace Bundle\ServerBundle;
 
-use Symfony\Components\Console\Output\OutputInterface;
+use Bundle\ServerBundle\Console;
 
 /*
  * This file is part of the ServerBundle package.
@@ -46,12 +46,12 @@ interface DaemonInterface
     function getPid();
 
     /**
-     * @return OutputInterface
+     * @return Console
      */
-    function getOutput();
+    function getConsole();
 
     /**
-     * @param OutputInterface $output
+     * @param Console $console
      */
-    function setOutput(OutputInterface $output);
+    function setConsole(Console $console);
 }

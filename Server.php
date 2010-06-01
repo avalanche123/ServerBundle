@@ -28,13 +28,14 @@ use Bundle\ServerBundle\ServerInterface,
  */
 class Server implements ServerInterface
 {
+    protected $console;
     protected $daemon;
-    protected $output;
     protected $dispatcher;
     protected $options;
     protected $clients;
     protected $servers;
     protected $shutdown;
+    protected $startTime;
 
     /**
      * @param EventDispatcher $dispatcher
@@ -47,8 +48,8 @@ class Server implements ServerInterface
      */
     public function __construct(EventDispatcher $dispatcher, array $options = array())
     {
+        $this->console    = null;
         $this->daemon     = null;
-        $this->output     = null;
         $this->dispatcher = $dispatcher;
         $this->clients    = array();
         $this->servers    = array();
@@ -109,33 +110,30 @@ class Server implements ServerInterface
     }
 
     /**
-     * @return OutputInterface
+     * @return Console
      */
-    public function getOutput()
+    public function getConsole()
     {
-        return $this->output;
+        return $this->console;
     }
 
     /**
-     * @param OutputInterface $output
+     * @param Console $console
      */
-    public function setOutput(OutputInterface $output)
+    public function setConsole(Console $console)
     {
-        $this->output = $output;
+        $this->console = $console;
     }
 
     /**
-     * @param string $style
+     * @param string $type
      * @param string $message
+     * @param array $parameters (optional)
      */
-    protected function output($style, $message)
+    protected function logConsole($type, $message, array $parameters = array())
     {
-        if (null !== $this->output) {
-            $this->output->writeln(sprintf('[%s] <info>%s</info> %s',
-                date('r'),
-                strtoupper($style),
-                $message
-            ));
+        if (null !== $this->console && is_callable(array($this->console, $type))) {
+            call_user_func(array($this->console, $type), $message, $parameters);
         }
     }
 
@@ -159,24 +157,30 @@ class Server implements ServerInterface
     public function start()
     {
         // Symfony & ServerBundle informations
-        $this->output('info', sprintf('    Symfony %s (%s, %s), ServerBundle %s (%s, %s)',
+        $this->logConsole('info', 'Symfony <comment>%s</comment> (<comment>%s</comment>, <comment>%s</comment>), ServerBundle <comment>%s</comment> (<comment>%s</comment>, <comment>%s</comment>)', array(
             Kernel::VERSION, $this->options['environment'],
             true === $this->options['debug'] ? 'debug' : 'non-debug',
             Bundle::VERSION, $this->options['kernel_environment'],
             true === $this->options['kernel_debug'] ? 'debug' : 'non-debug'
         ));
 
-        // php informations
-        $this->output('info', sprintf('    PHP %s [%s] %s pecl_http',
+        // PHP informations
+        $this->logConsole('info', 'PHP/<comment>%s</comment> [%s] <comment>%s</comment> pecl_http', array(
             phpversion(), PHP_SAPI, true === extension_loaded('pecl_http') ? 'with' : 'without'
         ));
 
         // start options
-        $this->output('info', sprintf('    Server#start(): pid=%d, address=%s, port=%d',
+        $this->logConsole('info', 'Server#start(): pid=<comment>%d</comment>, address=<comment>%s</comment>, port=<comment>%d</comment>', array(
             getmypid(), $this->options['address'], $this->options['port']
         ));
 
-        $timer = time();
+        // stop server notice
+        $this->logConsole('info', 'To stop the server, type <comment>^C</comment>');
+
+        // timers
+        $start  = time();
+        $timer  = time();
+        $status = time();
 
         // create server socket
         $this->createServerSocket();
@@ -190,6 +194,9 @@ class Server implements ServerInterface
 
         // max requests
         $requests = 0;
+
+        // send bytes
+        $sendTotal = 0;
 
         // disable max_requests_per_child in non-daemon mode
         if (null === $this->daemon || !$this->daemon->isChild()) {
@@ -227,7 +234,7 @@ class Server implements ServerInterface
                         }
 
                         // Request informations
-                        $this->output('request', sprintf(' %s %s',
+                        $this->logConsole('request', '%s <comment>%s</comment>', array(
                             $request->getRequestMethod(),
                             $request->getRequestUrl()
                         ));
@@ -258,9 +265,15 @@ class Server implements ServerInterface
 
                         // send Response
                         $send = $client->sendResponse($response);
+                        $sendTotal += $send;
+
+                        // Response status
+                        $message = $response->isSuccessful()
+                                 ? '<info>%d %s</info> (<comment>%d</comment> bytes)'
+                                 : '<error>%d %s</error> (<comment>%d</comment> bytes)';
 
                         // Response informations
-                        $this->output('response', sprintf('%d %s (%d bytes)',
+                        $this->logConsole('response', $message, array(
                             $response->getStatusCode(),
                             $response->getStatusText(),
                             $send
@@ -306,7 +319,7 @@ class Server implements ServerInterface
             }
 
             // only once a second
-            if (time() - $timer > 1) {
+            if (time() - $timer >= 1) {
                 foreach ($this->clients as $client) {
                     $client->timer();
                 }
@@ -315,8 +328,16 @@ class Server implements ServerInterface
             }
 
             // only once a minute
-            if (time() - $timer > 60) {
+            if (time() - $status >= 60) {
+                $this->logConsole('status', 'Server#status(): requests=<comment>%d</comment>, send=<comment>%.0f</comment>kb, memory=<comment>%.0f</comment>kb, peak=<comment>%.0f</comment>kb, running=<comment>%s</comment>s', array(
+                    $requests,
+                    $sendTotal / 1024,
+                    memory_get_usage(true) / 1024,
+                    memory_get_peak_usage(true) / 1024,
+                    time() - $start
+                ));
 
+                $status = time();
             }
 
             $this->cleanSockets();
@@ -343,7 +364,7 @@ class Server implements ServerInterface
             $server->disconnect();
         }
 
-        $this->output('info', '    Server#stop(): okay');
+        $this->logConsole('info', 'Server#stop(): okay');
 
         return true;
     }
