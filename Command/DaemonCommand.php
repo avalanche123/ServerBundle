@@ -34,7 +34,9 @@ abstract class DaemonCommand extends Command
 
         $this->daemon = $this->container->getDaemonService();
 
-        $this->console = new Console($output);
-        $this->daemon->setConsole($this->console);
+        if ($input->getOption('verbose')) {
+            $this->console = new Console($output);
+            $this->daemon->setConsole($this->console);
+        }
     }
 }
