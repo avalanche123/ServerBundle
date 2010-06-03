@@ -20,6 +20,18 @@ use Bundle\ServerBundle\Socket\Socket;
  */
 class ServerSocket extends Socket
 {
+    protected $maxClients;
+
+    /**
+     * @param integer $maxClients
+     */
+    public function __construct($maxClients = 100)
+    {
+        parent::__construct();
+
+        $this->maxClients = $maxClients;
+    }
+
     /**
      * @return boolean
      *
@@ -45,15 +57,25 @@ class ServerSocket extends Socket
             throw new \InvalidArgumentException('Port must be set');
         }
 
-        $this->socket = @stream_socket_server($this->getRealAddress(), $errno, $errstr, STREAM_SERVER_BIND | STREAM_SERVER_LISTEN, $this->context);
+        $this->socket = @socket_create($this->isIPv6 ? AF_INET6 : AF_INET, SOCK_STREAM, SOL_TCP);
 
         if (false === $this->socket) {
-            throw new \RuntimeException(sprintf('Cannot create socket: %s', $errstr), $errno);
+            throw new \RuntimeException(sprintf('Cannot create socket: %s', $this->getError()));
+        }
+
+        $this->setBlocking(false);
+        $this->setTimeout(0);
+        $this->setReuseAddress(true);
+
+        if (false === @socket_bind($this->socket, $this->address, $this->port)) {
+            throw new \RuntimeException(sprintf('Cannot bind to socket: %s', $this->getError()));
+        }
+
+        if (false === @socket_listen($this->socket, $this->maxClients)) {
+            throw new \RuntimeException(sprintf('Cannot bind to socket: %s', $this->getError()));
         }
 
         $this->connected = true;
-        $this->setBlocking(false);
-        $this->setTimeout(0);
 
         return true;
     }
@@ -65,10 +87,10 @@ class ServerSocket extends Socket
      */
     public function accept()
     {
-        $socket = @stream_socket_accept($this->socket);
+        $socket = @socket_accept($this->socket);
 
         if (false === $socket) {
-            throw new \RuntimeException('Cannot accept socket');
+            throw new \RuntimeException(sprintf('Cannot accept socket: %s', $this->getError()));
         }
 
         return $socket;

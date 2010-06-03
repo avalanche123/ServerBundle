@@ -42,6 +42,7 @@ class ClientSocket extends Socket
         $this->response   = null;
         $this->accepted   = time();
         $this->lastAction = $this->accepted;
+        $this->keepAlive  = false;
 
         // @see Resources/config/server.xml
         $this->options = array(
@@ -63,44 +64,6 @@ class ClientSocket extends Socket
     }
 
     /**
-     * @return boolean
-     *
-     * @throws \InvalidArgumentException If address is not set
-     * @throws \InvalidArgumentException If port is not set
-     * @throws \RuntimeException If socket cannot be created
-     */
-    public function connect($address = null, $port = null)
-    {
-        if (null !== $address) {
-            $this->setAddress($address);
-        }
-
-        if (null !== $port) {
-            $this->setPort($port);
-        }
-
-        if (null === $this->address) {
-            throw new \InvalidArgumentException('Address must be set');
-        }
-
-        if (null === $this->port) {
-            throw new \InvalidArgumentException('Port must be set');
-        }
-
-        $this->socket = @stream_socket_client($this->getRealAddress(), $errno, $errstr, STREAM_SERVER_BIND | STREAM_SERVER_LISTEN, $this->context);
-
-        if (false === $this->socket) {
-            throw new \RuntimeException(sprintf('Cannot create socket: %s', $errstr), $errno);
-        }
-
-        $this->connected = true;
-        $this->setBlocking(false);
-        $this->setTimeout($this->options['timeout']);
-
-        return true;
-    }
-
-    /**
      * @return Request
      */
     public function readResponse()
@@ -115,6 +78,7 @@ class ClientSocket extends Socket
         $message = trim($message);
 
         if (empty($message)) {
+            $this->disconnect();
             return false;
         }
 
@@ -122,6 +86,7 @@ class ClientSocket extends Socket
             // parse HTTP message
             $request = new Request($message);
         } catch (\InvalidArgumentException $e) {
+            $this->disconnect();
             return false;
         }
 
@@ -153,8 +118,9 @@ class ClientSocket extends Socket
             $this->response = $response;
         }
 
-        if (null === $this->response && !$this->keepAlive) {
-            return $this->disconnect();
+        if (null === $this->response) {
+            $this->disconnect();
+            return false;
         }
 
         $response = $this->response;
@@ -179,8 +145,14 @@ class ClientSocket extends Socket
         $this->request  = null;
         $this->response = null;
 
+        $send = $this->write($response->toString());
+
+        if (!$this->keepAlive) {
+            $this->disconnect();
+        }
+
         // write to socket
-        return parent::write($response->toString());
+        return $send;
     }
 
     /**

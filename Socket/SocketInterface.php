@@ -29,11 +29,9 @@ interface SocketInterface
     function getId();
 
     /**
-     * @param string $address
-     * @param integer $port
-     * @return boolean
+     * @return string
      */
-    function connect($address, $port);
+    function getError();
 
     /**
      * @return boolean
@@ -57,45 +55,21 @@ interface SocketInterface
     function read($length);
 
     /**
-     * @param string $address
-     * @param integer $length
-     * @return string
-     */
-    function readFrom($address, $length);
-
-    /**
      * @param string $data
      * @return integer
      */
     function write($data);
 
     /**
-     * @param string $address
-     * @param string $data
-     * @return integer
-     */
-    function writeTo($address, $data);
-
-    /**
-     * @return string
-     */
-    function getName();
-
-    /**
-     * @return string
-     */
-    function getPeerName();
-
-    /**
      * @return array
      */
-    function getOptions();
+    function getOption($option, $level = SOL_SOCKET);
 
     /**
-     * @param string $wrapper
      * @param string $option
      * @param mixed $value
+     * @param integer $level (optional)
      * @return boolean
      */
-    function setOption($wrapper, $option, $value);
+    function setOption($option, $value, $level = SOL_SOCKET);
 }
