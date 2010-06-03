@@ -37,7 +37,9 @@ class Console
     public function log($message, array $parameters = array())
     {
         if (null !== $this->output) {
-            $this->output->writeln(call_user_func_array('sprintf', array_merge(array($message), $parameters)));
+            $this->output->writeln(call_user_func_array('sprintf', array_merge(
+                array('[%s] '.$message), array_merge( array(date('H:i:s')), $parameters)
+            )));
         }
     }
 
@@ -47,7 +49,7 @@ class Console
      */
     public function info($message, array $parameters = array())
     {
-        $this->log(sprintf('[%s] <info>INFO</info>     %s', date('r'), $message), $parameters);
+        $this->log('<info>INFO</info>     '.$message, $parameters);
     }
 
     /**
@@ -56,7 +58,7 @@ class Console
      */
     public function error($message, array $parameters = array())
     {
-        $this->log(sprintf('[%s] <error>ERROR</error>    %s', date('r'), $message), $parameters);
+        $this->log('<error>ERROR</error>    '.$message, $parameters);
     }
 
     /**
@@ -65,7 +67,7 @@ class Console
      */
     public function status($message, array $parameters = array())
     {
-        $this->log(sprintf('[%s] <info>STATUS</info>   %s', date('r'), $message), $parameters);
+        $this->log('<info>STATUS</info>   '.$message, $parameters);
     }
 
     /**
@@ -74,7 +76,7 @@ class Console
      */
     public function request($message, array $parameters = array())
     {
-        $this->log(sprintf('[%s] <comment>REQUEST</comment>  %s', date('r'), $message), $parameters);
+        $this->log('<comment>REQUEST</comment>  '.$message, $parameters);
     }
 
     /**
@@ -83,6 +85,6 @@ class Console
      */
     public function response($message, array $parameters = array())
     {
-        $this->log(sprintf('[%s] <comment>RESPONSE</comment> %s', date('r'), $message), $parameters);
+        $this->log('<comment>RESPONSE</comment> '.$message, $parameters);
     }
 }
