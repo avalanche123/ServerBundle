@@ -329,7 +329,7 @@ class Server implements ServerInterface
 
             // only once a minute
             if (time() - $status >= 60) {
-                $this->logConsole('status', 'Server#status(): requests=<comment>%d</comment>, send=<comment>%.0f</comment>kb, memory=<comment>%.0f</comment>kb, peak=<comment>%.0f</comment>kb, running=<comment>%s</comment>s', array(
+                $this->logConsole('status', 'Server#status(): requests=<comment>%d</comment>, send=<comment>%.0f</comment>kb, memory=<comment>%.0f</comment>kb, peak=<comment>%.0f</comment>kb, uptime=<comment>%s</comment>s', array(
                     $requests,
                     $sendTotal / 1024,
                     memory_get_usage(true) / 1024,
