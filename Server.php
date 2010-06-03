@@ -33,7 +33,7 @@ class Server implements ServerInterface
     protected $dispatcher;
     protected $options;
     protected $clients;
-    protected $servers;
+    protected $server;
     protected $shutdown;
     protected $startTime;
 
@@ -52,11 +52,11 @@ class Server implements ServerInterface
         $this->daemon     = null;
         $this->dispatcher = $dispatcher;
         $this->clients    = array();
-        $this->servers    = array();
+        $this->server     = null;
         $this->shutdown   = false;
 
-        $clientClass       = 'Bundle\\ServerBundle\\Socket\\ClientSocket';
-        $serverClass       = 'Bundle\\ServerBundle\\Socket\\ServerSocket';
+        $clientClass = 'Bundle\\ServerBundle\\Socket\\ClientSocket';
+        $serverClass = 'Bundle\\ServerBundle\\Socket\\ServerSocket';
 
         // @see Resources/config/server.xml
         $this->options = array(
@@ -189,7 +189,7 @@ class Server implements ServerInterface
 
         // create select sets
         $read   = $this->createReadSet();
-        $write  = $this->createWriteSet();
+        $write  = null;
         $except = $this->createExceptSet();
 
         // max requests
@@ -206,7 +206,7 @@ class Server implements ServerInterface
         while (
             !$this->shutdown &&                                             // daemon stop?
             !$this->reachedMaxRequestsPerChild($requests) &&                // max requests?
-            false !== ($events = @stream_select($read, $write, $except, 0)) // socket alive?
+            false !== ($events = @socket_select($read, $write, $except, 1)) // socket alive?
         ) {
             // sockets changed
             if ($events > 0) {
@@ -214,9 +214,8 @@ class Server implements ServerInterface
                 foreach ($read as $socket) {
                     // accept client connection
                     if ($this->isServerSocket($socket)) {
-                        $server = $this->findSocket($socket);
-                        $client = $this->createClientSocket($server->accept());
-
+                        $this->createClientSocket($this->server->accept());
+                        continue;
                         // @TODO max clients check
                     }
 
@@ -229,7 +228,7 @@ class Server implements ServerInterface
 
                         // Request read?
                         if (!$request instanceof Request) {
-                            // @TODO disconnect client?
+                            $client->disconnect();
                             continue;
                         }
 
@@ -264,7 +263,7 @@ class Server implements ServerInterface
                         // @TODO add response checks?
 
                         // send Response
-                        $send = $client->sendResponse($response);
+                        $send       = $client->sendResponse($response);
                         $sendTotal += $send;
 
                         // Response status
@@ -284,36 +283,11 @@ class Server implements ServerInterface
                     }
                 }
 
-                // process write set
-                foreach ($write as $socket) {
-                    // send client data
-                    if ($this->isClientSocket($socket)) {
-                        $client = $this->findSocket($socket);
-
-                        if (!$client->isConnected()) {
-                            $client->connect();
-                        }
-
-                        // send response
-                        $client->sendResponse();
-
-                        // @TODO is that correct, here?
-                        $requests++;
-                    }
-                }
-
                 // process except set
                 foreach($except as $socket) {
                     // close client connection
                     if ($this->isClientSocket($socket)) {
-                        $client = $this->findSocket($socket);
-                        $id     = $client->getId();
-
-                        $client->disconnect();
-
-                        if (isset($this->clients[$id])) {
-                            unset($this->clients[$id]);
-                        }
+                        $this->findSocket($socket)->disconnect();
                     }
                 }
             }
@@ -326,6 +300,8 @@ class Server implements ServerInterface
 
                 $timer = time();
             }
+
+            $this->cleanSockets();
 
             // only once a minute
             if (time() - $status >= 60) {
@@ -340,11 +316,9 @@ class Server implements ServerInterface
                 $status = time();
             }
 
-            $this->cleanSockets();
-
             // override select sets
             $read   = $this->createReadSet();
-            $write  = $this->createWriteSet();
+            $write  = null;
             $except = $this->createExceptSet();
         }
 
@@ -418,14 +392,11 @@ class Server implements ServerInterface
      */
     protected function createServerSocket()
     {
-        $class  = $this->options['socket_server_class'];
-        $server = new $class();
-        $server->connect($this->options['address'], $this->options['port']);
+        $class        = $this->options['socket_server_class'];
+        $this->server = new $class($this->options['max_clients']);
+        $this->server->connect($this->options['address'], $this->options['port']);
 
-        // store socket
-        $this->servers[$server->getId()] = $server;
-
-        return $server;
+        return $this->server;
     }
 
     /**
@@ -459,7 +430,7 @@ class Server implements ServerInterface
             throw new \InvalidArgumentException('Socket must be a valid resource');
         }
 
-        if (isset($this->servers[(integer) $socket])) {
+        if ($this->server->getSocket() === $socket) {
             return true;
         }
 
@@ -474,15 +445,8 @@ class Server implements ServerInterface
         $removed = 0;
 
         foreach ($this->clients as $id => $client) {
-            if (!$client->isConnected()) {
+            if (!$client->isConnected() || !is_resource($client->getSocket())) {
                 unset($this->clients[$id]);
-                $removed++;
-            }
-        }
-
-        foreach ($this->servers as $id => $server) {
-            if (!$server->isConnected()) {
-                unset($this->servers[$id]);
                 $removed++;
             }
         }
@@ -502,14 +466,14 @@ class Server implements ServerInterface
             throw new \InvalidArgumentException('Socket must be a valid resource');
         }
 
+        if ($this->server->getSocket() === $socket) {
+            return $this->server;
+        }
+
         $id = (integer) $socket;
 
         if (isset($this->clients[$id])) {
             return $this->clients[$id];
-        }
-
-        if (isset($this->servers[$id])) {
-            return $this->servers[$id];
         }
 
         return null;
@@ -520,36 +484,10 @@ class Server implements ServerInterface
      */
     protected function createReadSet()
     {
-        $set = array();
+        $set = array($this->server->getSocket());
 
         foreach ($this->clients as $client) {
             $set[] = $client->getSocket();
-        }
-
-        foreach ($this->servers as $server) {
-            $set[] = $server->getSocket();
-        }
-
-        return $set;
-    }
-
-    /**
-     * @return array
-     */
-    protected function createWriteSet()
-    {
-        $set = array();
-
-        foreach ($this->clients as $client) {
-            if ($client->isConnected() && $client->isWaiting()) {
-                $set[] = $client->getSocket();
-            }
-        }
-
-        foreach ($this->servers as $server) {
-            if ($server->isWaiting()) {
-                $set[] = $server->getSocket();
-            }
         }
 
         return $set;
@@ -560,14 +498,10 @@ class Server implements ServerInterface
      */
     protected function createExceptSet()
     {
-        $set = array();
+        $set = array($this->server->getSocket());
 
         foreach ($this->clients as $client) {
             $set[] = $client->getSocket();
-        }
-
-        foreach ($this->servers as $server) {
-            $set[] = $server->getSocket();
         }
 
         return $set;
