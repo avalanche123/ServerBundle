@@ -199,20 +199,6 @@ class Response implements ResponseInterface, \Serializable
      */
     public function toString()
     {
-        // pecl_http extension
-        if (extension_loaded('http')) {
-            $message = new \HttpMessage();
-
-            $message->setType(HTTP_MSG_RESPONSE);
-            $message->setHttpVersion($this->httpVersion);
-            $message->setResponseCode($this->statusCode);
-            $message->setResponseStatus($this->statusText);
-            $message->setHeaders($this->headers->all());
-            $message->setBody($this->body);
-
-            return $message->toString();
-        }
-
         $message = sprintf("HTTP/%s %d %s\r\n", $this->httpVersion, $this->statusCode, $this->statusText);
 
         foreach ($this->headers->all() as $name => $value) {
