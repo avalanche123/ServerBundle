@@ -103,16 +103,6 @@ class ServerSocket extends Socket
     }
 
     /**
-     * @param integer $port
-     *
-     * @throws \InvalidArgumentException If the port number is not in range from 0 to 65535
-     */
-    public function setPort($port)
-    {
-        $this->port = $port;
-    }
-
-    /**
      * @return resource
      *
      * @throws \RuntimeException If socket cannot be accepted
