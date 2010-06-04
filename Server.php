@@ -214,9 +214,8 @@ class Server implements ServerInterface
                 foreach ($read as $socket) {
                     // accept client connection
                     if ($this->isServerSocket($socket)) {
-                        $this->createClientSocket($this->server->accept());
+                        $this->createClientSocket();
                         continue;
-                        // @TODO max clients check
                     }
 
                     // read client data
@@ -365,21 +364,16 @@ class Server implements ServerInterface
     }
 
     /**
-     * @param resource $socket
-     *
      * @return Bundle\ServerBundle\Socket\SocketInterface
      */
-    protected function createClientSocket($socket)
+    protected function createClientSocket()
     {
-        if (!is_resource($socket)) {
-            throw new \InvalidArgumentException('Socket must be a valid resource');
-        }
-
         $class  = $this->options['socket_client_class'];
-        $client = new $class($socket, array(
-            'timeout'           => $this->options['timeout'],
-            'keepalive_timeout' => $this->options['keepalive_timeout']
-        ));
+        $client = new $class(
+            $this->server->accept(),
+            $this->options['timeout'],
+            $this->options['keepalive_timeout']
+        );
 
         // store socket
         $this->clients[$client->getId()] = $client;
@@ -392,11 +386,18 @@ class Server implements ServerInterface
      */
     protected function createServerSocket()
     {
-        $class        = $this->options['socket_server_class'];
-        $this->server = new $class($this->options['max_clients']);
-        $this->server->connect($this->options['address'], $this->options['port']);
+        if (null !== $this->server) {
+            throw new \RuntimeException('Server socket already created');
+        }
 
-        return $this->server;
+        $class  = $this->options['socket_server_class'];
+        $server = new $class(
+            $this->options['address'],
+            $this->options['port'],
+            $this->options['max_clients']
+        );
+
+        return $this->server = $server;
     }
 
     /**
