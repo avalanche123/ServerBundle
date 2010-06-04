@@ -2,7 +2,8 @@
 
 namespace Bundle\ServerBundle\Socket;
 
-use Bundle\ServerBundle\Socket\Socket;
+use Bundle\ServerBundle\Socket\Socket,
+    Symfony\Components\DependencyInjection\ContainerInterface;
 
 /*
  * This file is part of the ServerBundle package.
@@ -20,6 +21,7 @@ use Bundle\ServerBundle\Socket\Socket;
  */
 class ServerSocket extends Socket
 {
+    protected $container;
     protected $isIPv6;
     protected $address;
     protected $port;
@@ -36,10 +38,11 @@ class ServerSocket extends Socket
      * @throws \RuntimeException If binding to socket fails
      * @throws \RuntimeException If listening to socket fails
      */
-    public function __construct($address = '*', $port = 1962, $maxClients = 100)
+    public function __construct(ContainerInterface $container, $address = '*', $port = 1962, $maxClients = 100)
     {
         parent::__construct();
 
+        $this->container  = $container;
         $this->isIPv6     = false;
         $this->address    = $address;
         $this->port       = $port;
@@ -100,6 +103,14 @@ class ServerSocket extends Socket
     public function getPort()
     {
         return $this->port;
+    }
+
+    /**
+     * @return Bundle\ServerBundle\Socket\ClientSocket
+     */
+    public function createClient()
+    {
+        return $this->container->getServer_SocketClientService();
     }
 
     /**

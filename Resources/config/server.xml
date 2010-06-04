@@ -7,6 +7,8 @@
     <!-- Services -->
     <parameter key="server.class">Bundle\ServerBundle\Server</parameter>
     <parameter key="server.event_dispatcher.class">Bundle\ServerBundle\EventDispatcher</parameter>
+    <parameter key="server.socket_server.class">Bundle\ServerBundle\Socket\ServerSocket</parameter>
+    <parameter key="server.socket_client.class">Bundle\ServerBundle\Socket\ClientSocket</parameter>
 
     <!-- Configuration -->
     <parameter key="server.address">*</parameter>
@@ -61,6 +63,20 @@
         <annotation name="server.listener" />
     </service>
 
+    <!-- (Server) Socket -->
+    <service id="server.socket_server" class="%server.socket_server.class%">
+      <argument type="service" id="service_container" />
+      <argument>%server.address%</argument>
+      <argument>%server.port%</argument>
+      <argument>%server.max_clients%</argument>
+    </service>
+
+    <service id="server.socket_client" class="%server.socket_client.class%" shared="false">
+      <argument type="service" id="server.socket_server" />
+      <argument>%server.timeout%</argument>
+      <argument>%server.keepalive_timeout%</argument>
+    </service>
+
     <!-- Services -->
     <service id="server.event_dispatcher" class="%server.event_dispatcher.class%">
       <argument type="service" id="service_container" />
@@ -68,6 +84,7 @@
 
     <service id="server" class="%server.class%">
       <argument type="service" id="server.event_dispatcher" />
+      <argument type="service" id="server.socket_server" />
       <argument type="collection">
         <argument key="environment">%kernel.environment%</argument>
         <argument key="debug">%kernel.debug%</argument>
@@ -80,8 +97,6 @@
         <argument key="document_root">%server.document_root%</argument>
         <argument key="timeout">%server.timeout%</argument>
         <argument key="keepalive_timeout">%server.keepalive_timeout%</argument>
-        <argument key="socket_client_class">Bundle\ServerBundle\Socket\ClientSocket</argument>
-        <argument key="socket_server_class">Bundle\ServerBundle\Socket\ServerSocket</argument>
       </argument>
     </service>
   </services>

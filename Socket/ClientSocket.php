@@ -24,6 +24,7 @@ use Bundle\ServerBundle\Socket\Socket,
  */
 class ClientSocket extends Socket
 {
+    protected $server;
     protected $accepted;
     protected $keepAlive;
     protected $lastAction;
@@ -34,21 +35,22 @@ class ClientSocket extends Socket
     protected $keepAliveTimeout;
 
     /**
-     * @param resource $socket
+     * @param ServerSocket $server
      * @param integer $timeout (optional)
      * @param integer $keepAliveTimeout (optional)
      */
-    public function __construct($socket, $timeout = 90, $keepAliveTimeout = 15)
+    public function __construct(ServerSocket $server, $timeout = 90, $keepAliveTimeout = 15)
     {
-        parent::__construct($socket);
-
-        $this->timeout          = $timeout;
-        $this->keepAliveTimeout = $keepAliveTimeout;
+        $this->server           = $server;
         $this->request          = null;
         $this->response         = null;
+        $this->timeout          = $timeout;
+        $this->keepAliveTimeout = $keepAliveTimeout;
+        $this->keepAlive        = false;
         $this->accepted         = time();
         $this->lastAction       = $this->accepted;
-        $this->keepAlive        = false;
+
+        parent::__construct($this->server->accept());
 
         // set timeout
         $this->setTimeout($this->timeout);

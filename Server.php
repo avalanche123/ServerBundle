@@ -4,6 +4,7 @@ namespace Bundle\ServerBundle;
 
 use Bundle\ServerBundle\ServerInterface,
     Bundle\ServerBundle\EventDispatcher,
+    Bundle\ServerBundle\Socket\ServerSocket,
     Bundle\ServerBundle\DaemonInterface,
     Symfony\Components\Console\Output\OutputInterface,
     Bundle\ServerBundle\Request,
@@ -39,6 +40,7 @@ class Server implements ServerInterface
 
     /**
      * @param EventDispatcher $dispatcher
+     * @param ServerSocket $server
      * @param array $options (optional)
      *
      * @throws \InvalidArgumentException When an unsupported option is provided
@@ -46,17 +48,14 @@ class Server implements ServerInterface
      * @throws \InvalidArgumentException If an invalid socket server class is provided
      * @throws \InvalidArgumentException If an invalid socket server client class is provided
      */
-    public function __construct(EventDispatcher $dispatcher, array $options = array())
+    public function __construct(EventDispatcher $dispatcher, ServerSocket $server, array $options = array())
     {
+        $this->dispatcher = $dispatcher;
+        $this->server     = $server;
         $this->console    = null;
         $this->daemon     = null;
-        $this->dispatcher = $dispatcher;
         $this->clients    = array();
-        $this->server     = null;
         $this->shutdown   = false;
-
-        $clientClass = 'Bundle\\ServerBundle\\Socket\\ClientSocket';
-        $serverClass = 'Bundle\\ServerBundle\\Socket\\ServerSocket';
 
         // @see Resources/config/server.xml
         $this->options = array(
@@ -69,8 +68,6 @@ class Server implements ServerInterface
             'max_clients'            => 100,
             'max_requests_per_child' => 1000,
             'document_root'          => null,
-            'socket_client_class'    => $clientClass,
-            'socket_server_class'    => $serverClass,
             'timeout'                => 90,
             'keepalive_timeout'      => 15
         );
@@ -81,16 +78,6 @@ class Server implements ServerInterface
         }
 
         $this->options = array_merge($this->options, $options);
-
-        // check socket client class
-        if (!$this->checkSocketClass($clientClass, $this->options['socket_client_class'])) {
-            throw new \InvalidArgumentException(sprintf('Client socket class must be a sublass of "%s"', $clientClass));
-        }
-
-        // check socket server class
-        if (!$this->checkSocketClass($serverClass, $this->options['socket_server_class'])) {
-            throw new \InvalidArgumentException(sprintf('Server socket class must be a sublass of "%s"', $serverClass));
-        }
     }
 
     /**
@@ -138,18 +125,6 @@ class Server implements ServerInterface
     }
 
     /**
-     * @param string $expected
-     * @param string $provided
-     * @return boolean
-     */
-    protected function checkSocketClass($expected, $provided)
-    {
-        $r = new \ReflectionClass($provided);
-
-        return $r->getName() == $expected || $r->isSubclassOf($expected);
-    }
-
-    /**
      * @return boolean
      *
      * @throws \RuntimeException If Request was not handled
@@ -181,11 +156,6 @@ class Server implements ServerInterface
         $start  = time();
         $timer  = time();
         $status = time();
-
-        // create server socket
-        $this->createServerSocket();
-
-        // @TODO spawn max_clients?
 
         // create select sets
         $read   = $this->createReadSet();
@@ -368,36 +338,12 @@ class Server implements ServerInterface
      */
     protected function createClientSocket()
     {
-        $class  = $this->options['socket_client_class'];
-        $client = new $class(
-            $this->server->accept(),
-            $this->options['timeout'],
-            $this->options['keepalive_timeout']
-        );
+        $client = $this->server->createClient();
 
         // store socket
         $this->clients[$client->getId()] = $client;
 
         return $client;
-    }
-
-    /**
-     * @return Bundle\ServerBundle\Socket\SocketInterface
-     */
-    protected function createServerSocket()
-    {
-        if (null !== $this->server) {
-            throw new \RuntimeException('Server socket already created');
-        }
-
-        $class  = $this->options['socket_server_class'];
-        $server = new $class(
-            $this->options['address'],
-            $this->options['port'],
-            $this->options['max_clients']
-        );
-
-        return $this->server = $server;
     }
 
     /**
