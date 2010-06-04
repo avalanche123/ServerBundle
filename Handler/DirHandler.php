@@ -96,7 +96,7 @@ class DirHandler implements HandlerInterface
             $headers['Content-Length'] = filesize($path);
 
             // build Response
-            $response = new Response();
+            $response = new Response($request);
             $response->setHttpVersion($request->getHttpVersion());
             $response->setStatusCode(200);
             $response->addHeaders($headers);
@@ -177,7 +177,7 @@ EOF;
             $headers['Content-Length'] = strlen($content);
 
             // build Response
-            $response = new Response();
+            $response = new Response($request);
             $response->setHttpVersion($request->getHttpVersion());
             $response->setStatusCode(200);
             $response->addHeaders($headers);

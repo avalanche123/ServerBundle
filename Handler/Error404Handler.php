@@ -56,7 +56,7 @@ class Error404Handler implements HandlerInterface
         $headers['Content-Length'] = strlen($content);
 
         // build Response
-        $response = new Response();
+        $response = new Response($request);
         $response->setHttpVersion($request->getHttpVersion());
         $response->setStatusCode($code, $status);
         $response->addHeaders($headers);

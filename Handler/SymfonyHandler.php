@@ -133,7 +133,7 @@ class SymfonyHandler implements HandlerInterface
             $headers['Content-Length'] = strlen($content);
 
             // build Response
-            $response = new Response();
+            $response = new Response($request);
             $response->setHttpVersion($request->getHttpVersion());
             $response->setStatusCode($code, $status);
             $response->addHeaders($headers);
@@ -153,7 +153,7 @@ class SymfonyHandler implements HandlerInterface
         $sfResponse->headers->set('Content-Length', strlen($sfContent));
 
         // build Response
-        $response = new Response();
+        $response = new Response($request);
         $response->setHttpVersion($sfResponse->getProtocolVersion());
         $response->setStatusCode($sfResponse->getStatusCode());
         $response->addHeaders($sfResponse->headers->all());

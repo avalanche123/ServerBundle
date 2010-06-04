@@ -3,6 +3,7 @@
 namespace Bundle\ServerBundle;
 
 use Bundle\ServerBundle\ResponseInterface,
+    Bundle\ServerBundle\RequestInterface,
     Bundle\ServerBundle\Request,
     Symfony\Components\HttpKernel\ParameterBag,
     Symfony\Components\HttpKernel\Response as SymfonyResponse;
@@ -23,6 +24,7 @@ use Bundle\ServerBundle\ResponseInterface,
  */
 class Response implements ResponseInterface, \Serializable
 {
+    protected $request;
     protected $httpVersion;
     protected $statusCode;
     protected $statusText;
@@ -30,14 +32,16 @@ class Response implements ResponseInterface, \Serializable
     protected $body;
 
     /**
+     * @param RequestInterface $request
      * @param string $httpVersion (optional)
      * @param integer $statusCode (optional)
      * @param string $statusText (optional)
      * @param array $headers (optional)
      * @param string $body (optional)
      */
-    public function __construct($httpVersion = Request::HTTP_11, $statusCode = 200, $statusText = 'OK', array $headers = array(), $body = null)
+    public function __construct(RequestInterface $request, $httpVersion = Request::HTTP_11, $statusCode = 200, $statusText = 'OK', array $headers = array(), $body = null)
     {
+        $this->request     = $request;
         $this->httpVersion = $httpVersion;
         $this->statusCode  = $statusCode;
         $this->statusText  = $statusText;
@@ -215,7 +219,12 @@ class Response implements ResponseInterface, \Serializable
             $message .= sprintf("%s: %s\r\n", trim($name), trim($value));
         }
 
-        $message .= "\r\n".$this->body;
+        $message .= "\r\n";
+
+        if (!$this->isEmpty() && !$this->isInformational() &&
+            !$this->request->getRequestMethod() == Request::METHOD_HEAD) {
+            $message .= $this->body;
+        }
 
         return $message;
     }
