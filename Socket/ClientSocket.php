@@ -30,37 +30,28 @@ class ClientSocket extends Socket
     protected $options;
     protected $request;
     protected $response;
+    protected $timeout;
+    protected $keepAliveTimeout;
 
     /**
      * @param resource $socket
+     * @param integer $timeout (optional)
+     * @param integer $keepAliveTimeout (optional)
      */
-    public function __construct($socket, array $options = array())
+    public function __construct($socket, $timeout = 90, $keepAliveTimeout = 15)
     {
         parent::__construct($socket);
 
-        $this->request    = null;
-        $this->response   = null;
-        $this->accepted   = time();
-        $this->lastAction = $this->accepted;
-        $this->keepAlive  = false;
-
-        // @see Resources/config/server.xml
-        $this->options = array(
-            'address'           => '*',
-            'port'              => 1962,
-            'timeout'           => 90,
-            'keepalive_timeout' => 15
-        );
-
-        // check option names
-        if ($diff = array_diff(array_keys($options), array_keys($this->options))) {
-            throw new \InvalidArgumentException(sprintf('The Server does not support the following options: \'%s\'.', implode('\', \'', $diff)));
-        }
-
-        $this->options = array_merge($this->options, $options);
+        $this->timeout          = $timeout;
+        $this->keepAliveTimeout = $keepAliveTimeout;
+        $this->request          = null;
+        $this->response         = null;
+        $this->accepted         = time();
+        $this->lastAction       = $this->accepted;
+        $this->keepAlive        = false;
 
         // set timeout
-        $this->setTimeout($this->options['timeout']);
+        $this->setTimeout($this->timeout);
     }
 
     /**
@@ -129,7 +120,7 @@ class ClientSocket extends Socket
         if (true === $this->keepAlive) {
             $response->setHeader('Connection', 'Keep-Alive');
             $response->setHeader('Keep-Alive', sprintf('timeout=%d max=%d',
-                $this->options['keepalive_timeout'], $this->options['timeout']
+                $this->keepAliveTimeout, $this->timeout
             ));
         } else {
             $response->setHeader('Connection', 'close');
@@ -170,7 +161,7 @@ class ClientSocket extends Socket
         $idle  = time() - $this->lastAction;
         $total = time() - $this->accepted;
 
-        if ($total > $this->options['timeout'] || $idle > $this->options['keepalive_timeout']) {
+        if ($total > $this->timeout || $idle > $this->keepAliveTimeout) {
             $this->disconnect();
         }
     }

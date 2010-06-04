@@ -20,41 +20,49 @@ use Bundle\ServerBundle\Socket\Socket;
  */
 class ServerSocket extends Socket
 {
+    protected $isIPv6;
+    protected $address;
+    protected $port;
     protected $maxClients;
 
     /**
-     * @param integer $maxClients
+     * @param string $address (optional)
+     * @param integer $port (optional)
+     * @param integer $maxClients (optional)
+     *
+     * @throws \InvalidArgumentException If address is not valid
+     * @throws \InvalidArgumentException If port is not in valid range
+     * @throws \RuntimeException If socket creation fails
+     * @throws \RuntimeException If binding to socket fails
+     * @throws \RuntimeException If listening to socket fails
      */
-    public function __construct($maxClients = 100)
+    public function __construct($address = '*', $port = 1962, $maxClients = 100)
     {
         parent::__construct();
 
+        $this->isIPv6     = false;
+        $this->address    = $address;
+        $this->port       = $port;
         $this->maxClients = $maxClients;
-    }
 
-    /**
-     * @return boolean
-     *
-     * @throws \InvalidArgumentException If address is not set
-     * @throws \InvalidArgumentException If port is not set
-     * @throws \RuntimeException If socket cannot be created
-     */
-    public function connect($address = null, $port = null)
-    {
-        if (null !== $address) {
-            $this->setAddress($address);
+        // convert wildcard address
+        if ('*' == $this->address) {
+            $this->address = '0.0.0.0';
         }
 
-        if (null !== $port) {
-            $this->setPort($port);
+        // validate [IPv4/6] address
+        if (false === filter_var($this->address, FILTER_VALIDATE_IP)) {
+            throw new \InvalidArgumentException(sprintf('The address "%s" is not a valid IP address', $this->address));
         }
 
-        if (null === $this->address) {
-            throw new \InvalidArgumentException('Address must be set');
+        // cover IPv6 address in braces
+        if (true === filter_var($this->address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            $this->isIPv6 = true;
         }
 
-        if (null === $this->port) {
-            throw new \InvalidArgumentException('Port must be set');
+        // validate port number
+        if (0 > $this->port || 65535 < $this->port) {
+            throw new \InvalidArgumentException('The port number must range from 0 to 65535');
         }
 
         $this->socket = @socket_create($this->isIPv6 ? AF_INET6 : AF_INET, SOCK_STREAM, SOL_TCP);
@@ -72,12 +80,36 @@ class ServerSocket extends Socket
         }
 
         if (false === @socket_listen($this->socket, $this->maxClients)) {
-            throw new \RuntimeException(sprintf('Cannot bind to socket: %s', $this->getError()));
+            throw new \RuntimeException(sprintf('Cannot listen to socket: %s', $this->getError()));
         }
 
-        $this->connected = true;
+        $this->connected  = true;
+    }
 
-        return true;
+    /**
+     * @return string
+     */
+    public function getAddress()
+    {
+        return $this->address;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getPort()
+    {
+        return $this->port;
+    }
+
+    /**
+     * @param integer $port
+     *
+     * @throws \InvalidArgumentException If the port number is not in range from 0 to 65535
+     */
+    public function setPort($port)
+    {
+        $this->port = $port;
     }
 
     /**

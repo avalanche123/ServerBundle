@@ -20,13 +20,9 @@ use Bundle\ServerBundle\Socket\SocketInterface;
  */
 abstract class Socket implements SocketInterface
 {
-    // protected $context;
     protected $socket;
     protected $connected;
     protected $blocked;
-    protected $isIPv6;
-    protected $address;
-    protected $port;
 
     /**
      * @return void
@@ -34,9 +30,6 @@ abstract class Socket implements SocketInterface
     public function __construct($socket = null)
     {
         $this->socket    = null;
-        $this->isIPv6    = false;
-        $this->address   = '0.0.0.0';
-        $this->port      = 1962;
         $this->connected = false;
         $this->blocked   = false;
 
@@ -62,75 +55,6 @@ abstract class Socket implements SocketInterface
     }
 
     /**
-     * @return string
-     */
-    public function getError()
-    {
-        $error = socket_strerror(socket_last_error($this->socket));
-
-        socket_clear_error($this->socket);
-
-        return $error;
-    }
-
-    /**
-     * @return string
-     */
-    public function getAddress()
-    {
-        return $this->address;
-    }
-
-    /**
-     * @param $address
-     *
-     * @throws \InvalidArgumentException If the address is not a valid IP address
-     */
-    public function setAddress($address)
-    {
-        $this->address = $address;
-
-        // convert wildcard address
-        if ('*' == $this->address) {
-            $this->address = '0.0.0.0';
-        }
-
-        // validate [IPv4/6] address
-        if (false === filter_var($this->address, FILTER_VALIDATE_IP)) {
-            throw new \InvalidArgumentException(sprintf('The address "%s" is not a valid IP address', $this->address));
-        }
-
-        // cover IPv6 address in braces
-        if (true === filter_var($this->address, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
-            $this->isIPv6 = true;
-            // $this->address = sprintf('[%s]', $this->address);
-        }
-    }
-
-    /**
-     * @return integer
-     */
-    public function getPort()
-    {
-        return $this->port;
-    }
-
-    /**
-     * @param integer $port
-     *
-     * @throws \InvalidArgumentException If the port number is not in range from 0 to 65535
-     */
-    public function setPort($port)
-    {
-        $this->port = $port;
-
-        // validate port number
-        if (0 > $this->port || 65535 < $this->port) {
-            throw new \InvalidArgumentException('The port number must range from 0 to 65535');
-        }
-    }
-
-    /**
      * @return integer
      */
     public function getId()
@@ -144,6 +68,18 @@ abstract class Socket implements SocketInterface
     public function getSocket()
     {
         return $this->socket;
+    }
+
+    /**
+     * @return string
+     */
+    public function getError()
+    {
+        $error = socket_strerror(socket_last_error($this->socket));
+
+        socket_clear_error($this->socket);
+
+        return $error;
     }
 
     /**
