@@ -4,13 +4,16 @@
   xsi:schemaLocation="http://www.symfony-project.org/schema/dic/services http://www.symfony-project.org/schema/dic/services/services-1.0.xsd">
 
   <parameters>
-    <!-- Services -->
     <parameter key="server.class">Bundle\ServerBundle\Server</parameter>
     <parameter key="server.event_dispatcher.class">Bundle\ServerBundle\EventDispatcher</parameter>
     <parameter key="server.socket_server.class">Bundle\ServerBundle\Socket\ServerSocket</parameter>
     <parameter key="server.socket_client.class">Bundle\ServerBundle\Socket\ClientSocket</parameter>
+    <parameter key="dir_handler.class">Bundle\ServerBundle\Handler\DirHandler</parameter>
+    <parameter key="symfony_handler.class">Bundle\ServerBundle\Handler\SymfonyHandler</parameter>
+    <parameter key="error404_handler.class">Bundle\ServerBundle\Handler\Error404Handler</parameter>
+    <parameter key="compression_filter.class">Bundle\ServerBundle\Filter\CompressionFilter</parameter>
+    <parameter key="statistics_filter.class">Bundle\ServerBundle\Filter\StatisticsFilter</parameter>
 
-    <!-- Configuration -->
     <parameter key="server.address">*</parameter>
     <parameter key="server.port">1962</parameter>
     <parameter key="server.max_clients">100</parameter>
@@ -19,24 +22,13 @@
     <parameter key="server.compression" type="constant">false</parameter>
     <parameter key="server.timeout">90</parameter>
     <parameter key="server.keepalive_timeout">15</parameter> 
-
-    <!-- (Request) Handlers -->
-    <parameter key="dir_handler.class">Bundle\ServerBundle\Handler\DirHandler</parameter>
-    <parameter key="symfony_handler.class">Bundle\ServerBundle\Handler\SymfonyHandler</parameter>
-    <parameter key="error404_handler.class">Bundle\ServerBundle\Handler\Error404Handler</parameter>
-
-    <!-- (Response) Filters -->
-    <parameter key="compression_filter.class">Bundle\ServerBundle\Filter\CompressionFilter</parameter>
-    <parameter key="statistics_filter.class">Bundle\ServerBundle\Filter\StatisticsFilter</parameter>
   </parameters>
 
   <services>
-    <!-- (Request) Handlers -->
     <service id="dir_handler" class="%dir_handler.class%">
         <annotation name="server.request_handler" />
         <argument type="string">%server.document_root%</argument>
     </service>
-
     <service id="symfony_handler" class="%symfony_handler.class%">
         <annotation name="server.request_handler" />
         <argument type="service" id="kernel" />
@@ -48,40 +40,33 @@
           <argument key="document_root">%server.document_root%</argument>
         </argument>
     </service>
-
     <service id="error404_handler" class="%error404_handler.class%">
         <annotation name="server.request_handler" />
     </service>
 
-    <!-- (Response) Filters -->
     <service id="compression_filter" class="%compression_filter.class%">
         <annotation name="server.response_filter" />
         <argument>%server.compression%</argument>
     </service>
-
     <service id="statistics_filter" class="%statistics_filter.class%">
         <annotation name="server.response_filter" />
     </service>
 
-    <!-- (Server) Socket -->
     <service id="server.socket_server" class="%server.socket_server.class%">
       <argument type="service" id="service_container" />
       <argument>%server.address%</argument>
       <argument>%server.port%</argument>
       <argument>%server.max_clients%</argument>
     </service>
-
     <service id="server.socket_client" class="%server.socket_client.class%" shared="false">
       <argument type="service" id="server.socket_server" />
       <argument>%server.timeout%</argument>
       <argument>%server.keepalive_timeout%</argument>
     </service>
 
-    <!-- Services -->
     <service id="server.event_dispatcher" class="%server.event_dispatcher.class%">
       <argument type="service" id="service_container" />
     </service>
-
     <service id="server" class="%server.class%">
       <argument type="service" id="server.event_dispatcher" />
       <argument type="service" id="server.socket_server" />
