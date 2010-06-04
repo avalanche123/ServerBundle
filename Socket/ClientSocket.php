@@ -79,6 +79,7 @@ class ClientSocket extends Socket
             // parse HTTP message
             $request = new Request($message);
         } catch (\InvalidArgumentException $e) {
+            // @TODO add 400 (Bad Request) response
             $this->disconnect();
             return false;
         }
