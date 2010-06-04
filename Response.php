@@ -199,18 +199,32 @@ class Response implements ResponseInterface, \Serializable
      */
     public function toString()
     {
+        // HTTP/0.9 (Simple Response)
+        if (Request::HTTP_09 == $this->httpVersion) {
+            return $this->body;
+        }
+
+        // HTTP/1.x (Full Response)
+        if ($this->request->getRequestMethod() == Request::METHOD_HEAD ||
+            $this->isEmpty() || $this->isInformational()) {
+
+            foreach ($this->headers->all() as $name => $value) {
+                if (false !== strpos(strtolower($name), 'content')) {
+                    $this->headers->delete($name);
+                }
+            }
+
+            $this->body = null;
+        }
+
         $message = sprintf("HTTP/%s %d %s\r\n", $this->httpVersion, $this->statusCode, $this->statusText);
 
         foreach ($this->headers->all() as $name => $value) {
             $message .= sprintf("%s: %s\r\n", trim($name), trim($value));
         }
 
-        $message .= "\r\n";
-
-        if (!$this->isEmpty() && !$this->isInformational() &&
-            !$this->request->getRequestMethod() == Request::METHOD_HEAD) {
-            $message .= $this->body;
-        }
+        // body may be empty
+        $message .= "\r\n".$this->body;
 
         return $message;
     }

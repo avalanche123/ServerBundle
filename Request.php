@@ -27,6 +27,7 @@ class Request implements RequestInterface, \Serializable
     protected $headers;
     protected $body;
 
+    const HTTP_09 = '0.9';
     const HTTP_10 = '1.0';
     const HTTP_11 = '1.1';
 
@@ -39,13 +40,14 @@ class Request implements RequestInterface, \Serializable
     const METHOD_OPTIONS = 'OPTIONS';
     const METHOD_CONNECT = 'CONNECT';
     const METHOD_PATCH   = 'PATCH';
+    // COPY, MOVE, LINK, UNLINK, WRAPPED
 
     /**
      * @param string $message (optional)
      */
     public function __construct($message = null)
     {
-        $this->httpVersion   = self::HTTP_11;
+        $this->httpVersion   = self::HTTP_10;
         $this->requestMethod = self::METHOD_GET;
         $this->requestUrl    = '/';
         $this->headers       = new ParameterBag();
@@ -73,7 +75,7 @@ class Request implements RequestInterface, \Serializable
      */
     static public function getHttpVersions()
     {
-        return array(self::HTTP_10, self::HTTP_11);
+        return array(self::HTTP_09, self::HTTP_10, self::HTTP_11);
     }
 
     /**
@@ -148,44 +150,54 @@ class Request implements RequestInterface, \Serializable
             implode('|', self::getHttpVersions())
         );
 
-        // parse request
+        // HTTP/1.x (Full Request)
         if (false === preg_match($pattern, $message, $matches)) {
-            throw new \InvalidArgumentException('Message is not a valid HTTP request');
-        }
-
-        // assign request variables
-        list(, $this->requestMethod, $this->requestUrl, $this->httpVersion) = $matches;
-
-        // empty body check
-        $headers = $message;
-        if (false !== $bodyPos = strpos($message, "\r\n\r\n")) {
-            $requestPos = strpos($message, "\r\n");
-            $headers    = trim(substr($message, $requestPos, $bodyPos));
-        }
-
-        // header pattern
-        $pattern = "/(.*?: .*?\r\n)/m";
-
-        // parse headers
-        if (false !== preg_match_all($pattern, $headers, $matches)) {
-            $headers = array();
-            foreach ($matches[0] as $header) {
-                list($name, $value) = explode(':', $header);
-                $headers[$name] = trim($value);
+            // HTTP/0.9 (Simple Request)
+            if (false === preg_match("/GET (.*?)\r\n/i", $message, $matches)) {
+                throw new \InvalidArgumentException('Message is not a valid HTTP request');
             }
 
-            $this->headers->replace($headers);
+            $this->httpVersion   = self::HTTP_09;
+            $this->requestUrl    = $matches[1];
+            $this->requestMethod = self::METHOD_GET;
+        } else {
+            // assign request variables
+            list(, $this->requestMethod, $this->requestUrl, $this->httpVersion) = $matches;
         }
 
-        // parse body
-        if (false !== $bodyPos) {
-            // @TODO add decompression of body if needed
-            $this->body = ltrim(substr($message, $bodyPos));
-        }
+        // HTTP/1.x (Full Request)
+        if (self::HTTP_09 != $this->httpVersion) {
+            // empty body check
+            $headers = $message;
+            if (false !== $bodyPos = strpos($message, "\r\n\r\n")) {
+                $requestPos = strpos($message, "\r\n");
+                $headers    = trim(substr($message, $requestPos, $bodyPos));
+            }
 
-        // HTTP 1.1 check for 'Host' header
-        if (self::HTTP_11 == $this->httpVersion && !$this->headers->has('Host')) {
-            throw new \InvalidArgumentException('All headers except "Host" are optional in the HTTP/1.1');
+            // header pattern
+            $pattern = "/(.*?: .*?\r\n)/m";
+
+            // parse headers
+            if (false !== preg_match_all($pattern, $headers, $matches)) {
+                $headers = array();
+                foreach ($matches[0] as $header) {
+                    list($name, $value) = explode(':', $header);
+                    $headers[$name] = trim($value);
+                }
+
+                $this->headers->replace($headers);
+            }
+
+            // parse body
+            if (false !== $bodyPos) {
+                // @TODO add decompression of body if needed
+                $this->body = ltrim(substr($message, $bodyPos));
+            }
+
+            // HTTP 1.1 check for 'Host' header
+            if (self::HTTP_11 == $this->httpVersion && !$this->headers->has('Host')) {
+                throw new \InvalidArgumentException('All headers except "Host" are optional in the HTTP/1.1');
+            }
         }
     }
 

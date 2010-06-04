@@ -122,7 +122,7 @@ class ClientSocket extends Socket
         // Connection: Keep-Alive check
         if (true === $this->keepAlive) {
             $response->setHeader('Connection', 'Keep-Alive');
-            $response->setHeader('Keep-Alive', sprintf('timeout=%d max=%d',
+            $response->setHeader('Keep-Alive', sprintf('timeout=%d, max=%d',
                 $this->keepAliveTimeout, $this->timeout
             ));
         } else {
@@ -133,8 +133,8 @@ class ClientSocket extends Socket
         $response->setHeader('Content-MD5', md5($response->getBody()));
 
         // Server and Via header
-        $response->setHeader('Server', 'Symfony '.Kernel::VERSION);
-        $response->setHeader('Via', 'ServerBundle '.Bundle::VERSION);
+        $response->setHeader('Server', 'Symfony/'.Kernel::VERSION);
+        $response->setHeader('Via', 'ServerBundle/'.Bundle::VERSION);
 
         $this->request  = null;
         $this->response = null;
