@@ -32,11 +32,8 @@ abstract class DaemonCommand extends Command
     {
         parent::initialize($input, $output);
 
-        $this->daemon = $this->container->getDaemonService();
-
-        if ($input->getOption('verbose')) {
-            $this->console = new Console($output);
-            $this->daemon->setConsole($this->console);
-        }
+        $this->daemon  = $this->container->getDaemonService();
+        $this->console = new Console($output);
+        $this->daemon->setConsole($this->console);
     }
 }
