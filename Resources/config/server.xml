@@ -33,12 +33,12 @@
   <services>
     <!-- (Request) Handlers -->
     <service id="dir_handler" class="%dir_handler.class%">
-        <annotation name="server.listener" />
+        <annotation name="server.request_handler" />
         <argument type="string">%server.document_root%</argument>
     </service>
 
     <service id="symfony_handler" class="%symfony_handler.class%">
-        <annotation name="server.listener" />
+        <annotation name="server.request_handler" />
         <argument type="service" id="kernel" />
         <argument type="collection">
           <argument key="kernel_environment">%server.kernel_environment%</argument>
@@ -50,17 +50,17 @@
     </service>
 
     <service id="error404_handler" class="%error404_handler.class%">
-        <annotation name="server.listener" />
+        <annotation name="server.request_handler" />
     </service>
 
     <!-- (Response) Filters -->
     <service id="compression_filter" class="%compression_filter.class%">
-        <annotation name="server.listener" />
+        <annotation name="server.response_filter" />
         <argument>%server.compression%</argument>
     </service>
 
     <service id="statistics_filter" class="%statistics_filter.class%">
-        <annotation name="server.listener" />
+        <annotation name="server.response_filter" />
     </service>
 
     <!-- (Server) Socket -->
