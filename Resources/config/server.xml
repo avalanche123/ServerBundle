@@ -6,13 +6,15 @@
   <parameters>
     <parameter key="server.class">Bundle\ServerBundle\Server</parameter>
     <parameter key="server.event_dispatcher.class">Bundle\ServerBundle\EventDispatcher</parameter>
+    <parameter key="server.request.class">Bundle\ServerBundle\Request</parameter>
+    <parameter key="server.response.class">Bundle\ServerBundle\Response</parameter>
     <parameter key="server.socket_server.class">Bundle\ServerBundle\Socket\ServerSocket</parameter>
     <parameter key="server.socket_client.class">Bundle\ServerBundle\Socket\ClientSocket</parameter>
-    <parameter key="dir_handler.class">Bundle\ServerBundle\Handler\DirHandler</parameter>
-    <parameter key="symfony_handler.class">Bundle\ServerBundle\Handler\SymfonyHandler</parameter>
-    <parameter key="error404_handler.class">Bundle\ServerBundle\Handler\Error404Handler</parameter>
-    <parameter key="compression_filter.class">Bundle\ServerBundle\Filter\CompressionFilter</parameter>
-    <parameter key="statistics_filter.class">Bundle\ServerBundle\Filter\StatisticsFilter</parameter>
+    <parameter key="server.dir_handler.class">Bundle\ServerBundle\Handler\DirHandler</parameter>
+    <parameter key="server.symfony_handler.class">Bundle\ServerBundle\Handler\SymfonyHandler</parameter>
+    <parameter key="server.error404_handler.class">Bundle\ServerBundle\Handler\Error404Handler</parameter>
+    <parameter key="server.compression_filter.class">Bundle\ServerBundle\Filter\CompressionFilter</parameter>
+    <parameter key="server.statistics_filter.class">Bundle\ServerBundle\Filter\StatisticsFilter</parameter>
 
     <parameter key="server.address">*</parameter>
     <parameter key="server.port">1962</parameter>
@@ -25,12 +27,14 @@
   </parameters>
 
   <services>
-    <service id="dir_handler" class="%dir_handler.class%">
+    <service id="server.dir_handler" class="%server.dir_handler.class%">
         <annotation name="server.request_handler" />
+      <argument type="service" id="service_container" />
         <argument type="string">%server.document_root%</argument>
     </service>
-    <service id="symfony_handler" class="%symfony_handler.class%">
+    <service id="server.symfony_handler" class="%server.symfony_handler.class%">
         <annotation name="server.request_handler" />
+      <argument type="service" id="service_container" />
         <argument type="service" id="kernel" />
         <argument type="collection">
           <argument key="kernel_environment">%server.kernel_environment%</argument>
@@ -40,16 +44,22 @@
           <argument key="document_root">%server.document_root%</argument>
         </argument>
     </service>
-    <service id="error404_handler" class="%error404_handler.class%">
+    <service id="server.error404_handler" class="%server.error404_handler.class%">
         <annotation name="server.request_handler" />
+      <argument type="service" id="service_container" />
     </service>
 
-    <service id="compression_filter" class="%compression_filter.class%">
+    <service id="server.compression_filter" class="%server.compression_filter.class%">
         <annotation name="server.response_filter" />
         <argument>%server.compression%</argument>
     </service>
-    <service id="statistics_filter" class="%statistics_filter.class%">
+    <service id="server.statistics_filter" class="%server.statistics_filter.class%">
         <annotation name="server.response_filter" />
+    </service>
+
+    <service id="server.request" class="%server.request.class%" />
+    <service id="server.response" class="%server.response.class%" shared="false">
+      <argument type="service" id="server.request" />
     </service>
 
     <service id="server.socket_server" class="%server.socket_server.class%">

@@ -2,7 +2,8 @@
 
 namespace Bundle\ServerBundle\Handler;
 
-use Bundle\ServerBundle\Handler\HandlerInterface,
+use Bundle\ServerBundle\Handler\Handler,
+    Symfony\Components\DependencyInjection\ContainerInterface,
     Bundle\ServerBundle\Response,
     Symfony\Components\EventDispatcher\EventDispatcher,
     Symfony\Components\EventDispatcher\Event,
@@ -25,17 +26,21 @@ use Bundle\ServerBundle\Handler\HandlerInterface,
  * @subpackage Handler
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-class SymfonyHandler implements HandlerInterface
+class SymfonyHandler extends Handler
 {
     protected $kernel;
     protected $customKernel;
     protected $options;
 
     /**
+     * @param ContainerInterface $container
      * @param KernelInterface $kernel
+     * @param array $options (optional)
      */
-    public function __construct(HttpKernelInterface $kernel, array $options)
+    public function __construct(ContainerInterface $container, HttpKernelInterface $kernel, array $options)
     {
+        parent::__construct($container);
+
         $this->kernel       = $kernel;
         $this->customKernel = null;
 
@@ -133,7 +138,7 @@ class SymfonyHandler implements HandlerInterface
             $headers['Content-Length'] = strlen($content);
 
             // build Response
-            $response = new Response($request);
+            $response = $this->container->getServer_ResponseService();
             $response->setHttpVersion($request->getHttpVersion());
             $response->setStatusCode($code, $status);
             $response->addHeaders($headers);
@@ -153,7 +158,7 @@ class SymfonyHandler implements HandlerInterface
         $sfResponse->headers->set('Content-Length', strlen($sfContent));
 
         // build Response
-        $response = new Response($request);
+        $response = $this->container->getServer_ResponseService();
         $response->setHttpVersion($sfResponse->getProtocolVersion());
         $response->setStatusCode($sfResponse->getStatusCode());
         $response->addHeaders($sfResponse->headers->all());

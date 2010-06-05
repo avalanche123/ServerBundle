@@ -2,7 +2,8 @@
 
 namespace Bundle\ServerBundle\Handler;
 
-use Bundle\ServerBundle\Handler\HandlerInterface,
+use Bundle\ServerBundle\Handler\Handler,
+    Symfony\Components\DependencyInjection\ContainerInterface,
     Bundle\ServerBundle\Response,
     Symfony\Components\EventDispatcher\EventDispatcher,
     Symfony\Components\EventDispatcher\Event,
@@ -22,15 +23,18 @@ use Bundle\ServerBundle\Handler\HandlerInterface,
  * @subpackage Handler
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-class DirHandler implements HandlerInterface
+class DirHandler extends Handler
 {
     protected $documentRoot;
 
     /**
+     * @param ContainerInterface $container
      * @param string $documentRoot
      */
-    public function __construct($documentRoot)
+    public function __construct(ContainerInterface $container, $documentRoot)
     {
+        parent::__construct($container);
+
         $this->documentRoot = realpath($documentRoot);
     }
 
@@ -96,7 +100,7 @@ class DirHandler implements HandlerInterface
             $headers['Content-Length'] = filesize($path);
 
             // build Response
-            $response = new Response($request);
+            $response = $this->container->getServer_ResponseService();
             $response->setHttpVersion($request->getHttpVersion());
             $response->setStatusCode(200);
             $response->addHeaders($headers);
@@ -177,7 +181,7 @@ EOF;
             $headers['Content-Length'] = strlen($content);
 
             // build Response
-            $response = new Response($request);
+            $response = $this->container->getServer_ResponseService();
             $response->setHttpVersion($request->getHttpVersion());
             $response->setStatusCode(200);
             $response->addHeaders($headers);

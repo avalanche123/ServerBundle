@@ -2,7 +2,7 @@
 
 namespace Bundle\ServerBundle\Handler;
 
-use Bundle\ServerBundle\Handler\HandlerInterface,
+use Bundle\ServerBundle\Handler\Handler,
     Bundle\ServerBundle\Response,
     Symfony\Components\EventDispatcher\EventDispatcher,
     Symfony\Components\EventDispatcher\Event,
@@ -22,7 +22,7 @@ use Bundle\ServerBundle\Handler\HandlerInterface,
  * @subpackage Handler
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-class Error404Handler implements HandlerInterface
+class Error404Handler extends Handler
 {
     /**
      * @param EventDispatcher $dispatcher
@@ -56,7 +56,7 @@ class Error404Handler implements HandlerInterface
         $headers['Content-Length'] = strlen($content);
 
         // build Response
-        $response = new Response($request);
+        $response = $this->container->getServer_ResponseService();
         $response->setHttpVersion($request->getHttpVersion());
         $response->setStatusCode($code, $status);
         $response->addHeaders($headers);
