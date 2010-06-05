@@ -28,33 +28,33 @@
 
   <services>
     <service id="server.dir_handler" class="%server.dir_handler.class%">
-        <annotation name="server.request_handler" />
+      <annotation name="server.request_handler" />
       <argument type="service" id="service_container" />
-        <argument type="string">%server.document_root%</argument>
+      <argument type="string">%server.document_root%</argument>
     </service>
     <service id="server.symfony_handler" class="%server.symfony_handler.class%">
-        <annotation name="server.request_handler" />
+      <annotation name="server.request_handler" />
       <argument type="service" id="service_container" />
-        <argument type="service" id="kernel" />
-        <argument type="collection">
-          <argument key="kernel_environment">%server.kernel_environment%</argument>
-          <argument key="kernel_debug">%server.kernel_debug%</argument>
-          <argument key="address">%server.address%</argument>
-          <argument key="port">%server.port%</argument>
-          <argument key="document_root">%server.document_root%</argument>
-        </argument>
+      <argument type="service" id="kernel" />
+      <argument type="collection">
+        <argument key="kernel_environment">%server.kernel_environment%</argument>
+        <argument key="kernel_debug">%server.kernel_debug%</argument>
+        <argument key="address">%server.address%</argument>
+        <argument key="port">%server.port%</argument>
+        <argument key="document_root">%server.document_root%</argument>
+      </argument>
     </service>
     <service id="server.error404_handler" class="%server.error404_handler.class%">
-        <annotation name="server.request_handler" />
+      <annotation name="server.request_handler" />
       <argument type="service" id="service_container" />
     </service>
 
     <service id="server.compression_filter" class="%server.compression_filter.class%">
-        <annotation name="server.response_filter" />
-        <argument>%server.compression%</argument>
+      <annotation name="server.response_filter" />
+      <argument>%server.compression%</argument>
     </service>
     <service id="server.statistics_filter" class="%server.statistics_filter.class%">
-        <annotation name="server.response_filter" />
+      <annotation name="server.response_filter" />
     </service>
 
     <service id="server.request" class="%server.request.class%" />
