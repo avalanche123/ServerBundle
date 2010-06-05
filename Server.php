@@ -196,7 +196,7 @@ class Server implements ServerInterface
                         $request = $client->readResponse();
 
                         // Request read?
-                        if (!$request instanceof Request) {
+                        if (false === $request) {
                             $client->disconnect();
                             continue;
                         }
