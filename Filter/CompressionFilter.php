@@ -46,8 +46,8 @@ class CompressionFilter implements FilterInterface
 
     /**
      * @param Event $event
-     * @param mixed $value
-     * @return mixed
+     * @param ResponseInterface $response
+     * @return ResponseInterface
      *
      * @see EventDispatcher::filter()
      */

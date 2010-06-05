@@ -35,7 +35,7 @@ class StatisticsFilter implements FilterInterface
     /**
      * @param Event $event
      * @param ResponseInterface $response
-     * @return mixed
+     * @return ResponseInterface
      *
      * @see EventDispatcher::filter()
      */
