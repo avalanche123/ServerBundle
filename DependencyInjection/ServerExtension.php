@@ -52,11 +52,7 @@ class ServerExtension extends LoaderExtension
         $configuration->merge($loader->load($this->resources['daemon']));
 
         if (isset($config['class'])) {
-            $r = new \ReflectionClass($config['class']);
-
-            if (!$r->implementsInterface($interface = 'Bundle\\ServerBundle\\DaemonInterface')) {
-                throw new \InvalidArgumentException(sprintf('Daemon class "%s" must implement "%s"', $config['class'], $interface));
-            }
+            $this->checkServiceClassInterface('Daemon', $config['class'], 'Bundle\\ServerBundle\\DaemonInterface');
 
             $configuration->setParameter('daemon.class', $config['class']);
         }
@@ -93,16 +89,63 @@ class ServerExtension extends LoaderExtension
         $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
         $configuration->merge($loader->load($this->resources['server']));
 
-        if (isset($config['class'])) {
-            $r = new \ReflectionClass($config['class']);
+        // Server configuration
+        if (isset($config['max_clients'])) {
+            $configuration->setParameter('server.max_clients');
+        }
+        if (isset($config['max_requests_per_child'])) {
+            $configuration->setParameter('server.max_requests_per_child', $config['max_requests_per_child']);
+        }
+        if (isset($config['document_root'])) {
+            $configuration->setParameter('server.document_root', $config['document_root']);
+        }
 
-            if (!$r->implementsInterface($interface = 'Bundle\\ServerBundle\\ServerInterface')) {
-                throw new \InvalidArgumentException(sprintf('Server class "%s" must implement "%s"', $config['class'], $interface));
-            }
+        // Socket configuration
+        if (isset($config['address'])) {
+            $configuration->setParameter('server.address', $config['address']);
+        }
+        if (isset($config['port'])) {
+            $configuration->setParameter('server.port', $config['port']);
+        }
+        if (isset($config['timeout'])) {
+            $configuration->setParameter('server.timeout', $config['timeout']);
+        }
+        if (isset($config['keepalive_timeout'])) {
+            $configuration->setParameter('server.keepalive_timeout', $config['keepalive_timeout']);
+        }
+
+        // Classes
+        if (isset($config['class'])) {
+            $this->checkServiceClassInterface('Server', $config['class'], 'Bundle\\ServerBundle\\ServerInterface');
 
             $configuration->setParameter('daemon.class', $config['class']);
         }
+        if (isset($config['request'])) {
+            echo $config['response'].PHP_EOL;
+            $this->checkServiceClassInterface('Request', $config['request'], 'Bundle\\ServerBundle\\RequestInterface');
 
+            $configuration->setParameter('server.request.class', $config['request']);
+        }
+        if (isset($config['response'])) {
+            echo $config['response'].PHP_EOL;
+            $this->checkServiceClassInterface('Response', $config['response'], 'Bundle\\ServerBundle\\ResponseInterface');
+
+            $configuration->setParameter('server.response.class', $config['response']);
+        }
+
+        // Handlers
+        if (isset($config['handlers'])) {
+            if (!is_array($config['handlers'])) {
+                throw new \InvalidArgumentException(sprintf('Handler configuration must be of type array, "%s" given', gettype($config['handlers'])));
+            }
+
+            foreach ($config['handlers'] as $handler) {
+                // @TODO: configure handlers
+                // $this->checkServiceClassInterface('Handler', $handler['class'], 'Bundle\\ServerBundle\\Handler\\HandlerInterface');
+            }
+        }
+
+        // Handler configuration
         if (isset($config['environment'])) {
             $configuration->setParameter('server.kernel_environment', $config['environment']);
 
@@ -113,7 +156,6 @@ class ServerExtension extends LoaderExtension
         } else {
             $configuration->setParameter('server.kernel_environment', $this->container->getParameter('kernel.environment'));
         }
-
         if (isset($config['debug'])) {
             $configuration->setParameter('server.kernel_debug', $config['debug']);
 
@@ -125,39 +167,43 @@ class ServerExtension extends LoaderExtension
             $configuration->setParameter('server.kernel_debug', $this->container->getParameter('kernel.debug'));
         }
 
-        if (isset($config['address'])) {
-            $configuration->setParameter('server.address', $config['address']);
+        // Filters
+        if (isset($config['filters'])) {
+            if (!is_array($config['filters'])) {
+                throw new \InvalidArgumentException(sprintf('Filter configuration must be of type array, "%s" given', gettype($config['filters'])));
+            }
+
+            foreach ($config['filters'] as $filter) {
+                // @TODO: configure filters
+                // $this->checkServiceClassInterface('Filter', $filter['class'], 'Bundle\\ServerBundle\\Filter\\FilterInterface');
+            }
         }
 
-        if (isset($config['port'])) {
-            $configuration->setParameter('server.port', $config['port']);
-        }
-
-        if (isset($config['max_clients'])) {
-            $configuration->setParameter('server.max_clients');
-        }
-
-        if (isset($config['max_requests_per_child'])) {
-            $configuration->setParameter('server.max_requests_per_child', $config['max_requests_per_child']);
-        }
-
-        if (isset($config['document_root'])) {
-            $configuration->setParameter('server.document_root', $config['document_root']);
-        }
-
+        // Filter configuration
         if (isset($config['compression'])) {
             $configuration->setParameter('server.compression', $config['compression']);
         }
 
-        if (isset($config['timeout'])) {
-            $configuration->setParameter('server.timeout', $config['timeout']);
-        }
-
-        if (isset($config['keepalive_timeout'])) {
-            $configuration->setParameter('server.keepalive_timeout', $config['keepalive_timeout']);
-        }
-
         return $configuration;
+    }
+
+    /**
+     * @param string $service
+     * @param string $class
+     * @param string $interface
+     * @return boolean
+     *
+     * @throws \InvalidArgumentException If the class does not implement the interface
+     */
+    protected function checkServiceClassInterface($service, $class, $interface)
+    {
+        $r = new \ReflectionClass($class);
+
+        if (!$r->implementsInterface($interface)) {
+            throw new \InvalidArgumentException(sprintf('%s class "%s" must implement "%s"', $service, $class, $interface));
+        }
+
+        return true;
     }
 
     /**
