@@ -121,13 +121,11 @@ class ServerExtension extends LoaderExtension
             $configuration->setParameter('daemon.class', $config['class']);
         }
         if (isset($config['request'])) {
-            echo $config['response'].PHP_EOL;
             $this->checkServiceClassInterface('Request', $config['request'], 'Bundle\\ServerBundle\\RequestInterface');
 
             $configuration->setParameter('server.request.class', $config['request']);
         }
         if (isset($config['response'])) {
-            echo $config['response'].PHP_EOL;
             $this->checkServiceClassInterface('Response', $config['response'], 'Bundle\\ServerBundle\\ResponseInterface');
 
             $configuration->setParameter('server.response.class', $config['response']);
