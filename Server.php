@@ -316,7 +316,10 @@ class Server implements ServerInterface
 
                         /** @var $event Event */
                         $event = $this->dispatcher->notifyUntil(
-                            new Event($request, 'server.request')
+                            new Event($request, 'server.request', array(
+                                'server' => $this->server,
+                                'client' => $client
+                            ))
                         );
 
                         // Request handled?
@@ -329,7 +332,10 @@ class Server implements ServerInterface
 
                         /** @var $event Event */
                         $event = $this->dispatcher->filter(
-                            new Event($request, 'server.response'),
+                            new Event($request, 'server.response', array(
+                                'server' => $this->server,
+                                'client' => $client
+                            )),
                             $response
                         );
 
