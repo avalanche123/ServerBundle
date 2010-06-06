@@ -4,7 +4,7 @@ namespace Bundle\ServerBundle\Command;
 
 use Symfony\Components\Console\Input\InputInterface,
     Symfony\Components\Console\Output\OutputInterface,
-    Bundle\ServerBundle\Command\DaemonCommand;
+    Bundle\ServerBundle\Command\Command;
 
 /*
  * This file is part of the ServerBundle package.
@@ -20,7 +20,7 @@ use Symfony\Components\Console\Input\InputInterface,
  * @subpackage Command
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-class ReloadCommand extends DaemonCommand
+class ReloadCommand extends Command
 {
     /**
      * @see Command
