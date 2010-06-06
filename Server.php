@@ -30,6 +30,7 @@ class Server implements ServerInterface
 {
     protected $console;
     protected $dispatcher;
+    protected $isDaemon;
     protected $options;
     protected $clients;
     protected $server;
