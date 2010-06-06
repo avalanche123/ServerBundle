@@ -62,14 +62,14 @@
       <argument type="service" id="server.request" />
     </service>
 
-    <service id="server.socket_server" class="%server.socket_server.class%">
+    <service id="server.server_socket" class="%server.socket_server.class%">
       <argument type="service" id="service_container" />
       <argument>%server.address%</argument>
       <argument>%server.port%</argument>
       <argument>%server.max_clients%</argument>
     </service>
-    <service id="server.socket_client" class="%server.socket_client.class%" shared="false">
-      <argument type="service" id="server.socket_server" />
+    <service id="server.client_socket" class="%server.socket_client.class%" shared="false">
+      <argument type="service" id="server.server_socket" />
       <argument>%server.timeout%</argument>
       <argument>%server.keepalive_timeout%</argument>
     </service>
@@ -79,7 +79,7 @@
     </service>
     <service id="server" class="%server.class%">
       <argument type="service" id="server.event_dispatcher" />
-      <argument type="service" id="server.socket_server" />
+      <argument type="service" id="server.server_socket" />
       <argument type="collection">
         <argument key="environment">%kernel.environment%</argument>
         <argument key="debug">%kernel.debug%</argument>

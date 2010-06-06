@@ -110,7 +110,7 @@ class ServerSocket extends Socket
      */
     public function createClient()
     {
-        return $this->container->getServer_SocketClientService();
+        return $this->container->getServer_ClientSocketService();
     }
 
     /**
