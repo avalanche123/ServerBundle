@@ -133,8 +133,8 @@ class ClientSocket extends Socket
         $response->setHeader('Content-MD5', md5($response->getBody()));
 
         // Server and Via header
-        $response->setHeader('Server', 'Symfony/'.Kernel::VERSION);
-        $response->setHeader('Via', 'ServerBundle/'.Bundle::VERSION);
+        $response->setHeader('Server', sprintf('Symfony/%s (ServerBundle)', Kernel::VERSION));
+        $response->setHeader('Via', sprintf('ServerBundle/%s', Bundle::VERSION));
 
         $this->request  = null;
         $this->response = null;
@@ -167,5 +167,29 @@ class ClientSocket extends Socket
         if ($total > $this->timeout || $idle > $this->keepAliveTimeout) {
             $this->disconnect();
         }
+    }
+
+    /**
+     * @return integer
+     */
+    public function getAccepted()
+    {
+        return $this->accepted;
+    }
+
+    /**
+     * @return integer
+     */
+    public function getLastAction()
+    {
+        return $this->lastAction;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isKeepAlive()
+    {
+        return $this->keepAlive;
     }
 }

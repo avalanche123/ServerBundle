@@ -168,10 +168,10 @@ class Request implements RequestInterface, \Serializable
         // HTTP/1.x (Full Request)
         if (self::HTTP_09 != $this->httpVersion) {
             // empty body check
-            $headers = $message;
+            $headers = $message."\r\n";
             if (false !== $bodyPos = strpos($message, "\r\n\r\n")) {
                 $requestPos = strpos($message, "\r\n");
-                $headers    = trim(substr($message, $requestPos, $bodyPos));
+                $headers    = substr($message, $requestPos, $bodyPos);
             }
 
             // header pattern

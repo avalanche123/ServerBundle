@@ -20,6 +20,9 @@
     <parameter key="server.user" type="constant">null</parameter>
     <parameter key="server.group" type="constant">null</parameter>
     <parameter key="server.umask" type="constant">null</parameter>
+    <parameter key="server.hostname">localhost</parameter>
+    <parameter key="server.admin">root@localhost</parameter>
+    <parameter key="server.hostname_lookups" type="constant">false</parameter>
     <parameter key="server.address">*</parameter>
     <parameter key="server.port">1962</parameter>
     <parameter key="server.max_clients">100</parameter>
@@ -41,10 +44,11 @@
       <argument type="service" id="service_container" />
       <argument type="service" id="kernel" />
       <argument type="collection">
+        <argument key="hostname">%server.hostname%</argument>
+        <argument key="admin">%server.admin%</argument>
+        <argument key="hostname_lookups">%server.hostname_lookups%</argument>
         <argument key="kernel_environment">%server.kernel_environment%</argument>
         <argument key="kernel_debug">%server.kernel_debug%</argument>
-        <argument key="address">%server.address%</argument>
-        <argument key="port">%server.port%</argument>
         <argument key="document_root">%server.document_root%</argument>
       </argument>
     </service>

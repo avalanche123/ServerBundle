@@ -50,41 +50,20 @@ class ServerExtension extends LoaderExtension
         $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
         $configuration->merge($loader->load($this->resources['server']));
 
-        // Server configuration
-        if (isset($config['pid_file'])) {
-            $configuration->setParameter('server.pid_file', $config['pid_file']);
-        }
-        if (isset($config['user'])) {
-            $configuration->setParameter('server.user', $config['user']);
-        }
-        if (isset($config['group'])) {
-            $configuration->setParameter('server.group', $config['group']);
-        }
-        if (isset($config['umask'])) {
-            $configuration->setParameter('server.umask', $config['umask']);
-        }
-        if (isset($config['max_clients'])) {
-            $configuration->setParameter('server.max_clients', $config['max_clients']);
-        }
-        if (isset($config['max_requests_per_child'])) {
-            $configuration->setParameter('server.max_requests_per_child', $config['max_requests_per_child']);
-        }
-        if (isset($config['document_root'])) {
-            $configuration->setParameter('server.document_root', $config['document_root']);
-        }
+        // Options
+        $options = array(
+            'pid_file', 'user', 'group', 'umask', 'hostname', 'admin',
+            'hostname_lookups', 'max_clients', 'max_requests_per_child',
+            'address', 'port', 'timeout', 'keepalive_timeout',
+        );
 
-        // Socket configuration
-        if (isset($config['address'])) {
-            $configuration->setParameter('server.address', $config['address']);
-        }
-        if (isset($config['port'])) {
-            $configuration->setParameter('server.port', $config['port']);
-        }
-        if (isset($config['timeout'])) {
-            $configuration->setParameter('server.timeout', $config['timeout']);
-        }
-        if (isset($config['keepalive_timeout'])) {
-            $configuration->setParameter('server.keepalive_timeout', $config['keepalive_timeout']);
+        // General
+        foreach ($options as $name) {
+            if (!array_key_exists($name, $config)) {
+                continue;
+            }
+
+            $configuration->setParameter(sprintf('server.%s', $name), $config[$name]);
         }
 
         // Classes

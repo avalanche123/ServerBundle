@@ -190,4 +190,24 @@ abstract class Socket implements SocketInterface
 
         return $send;
     }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        socket_getsockname($this->socket, $address, $port);
+
+        return sprintf('%s:%d', $address, $port);
+    }
+
+    /**
+     * @return string
+     */
+    public function getPeerName()
+    {
+        socket_getpeername($this->socket, $address, $port);
+
+        return sprintf('%s:%d', $address, $port);
+    }
 }

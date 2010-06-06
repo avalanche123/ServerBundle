@@ -4,6 +4,7 @@ namespace Bundle\ServerBundle\Handler;
 
 use Bundle\ServerBundle\Handler\Handler,
     Symfony\Components\DependencyInjection\ContainerInterface,
+    Bundle\ServerBundle\Request,
     Bundle\ServerBundle\Response,
     Symfony\Components\EventDispatcher\EventDispatcher,
     Symfony\Components\EventDispatcher\Event,
@@ -47,8 +48,9 @@ class SymfonyHandler extends Handler
         $this->options = array(
             'kernel_environment' => 'dev',
             'kernel_debug'       => true,
-            'address'            => '127.0.0.1',
-            'port'               => 1962,
+            'hostname'           => 'localhost',
+            'admin'              => 'root@localhost',
+            'hostname_lookups'   => false,
             'document_root'      => $this->kernel->getRootDir().'/../web'
         );
 
@@ -59,8 +61,8 @@ class SymfonyHandler extends Handler
 
         $this->options = array_merge($this->options, $options);
 
-        // protocol must be TCP
-        $this->options['protocol'] = 'tcp';
+        // realpath document root
+        $this->options['document_root'] = realpath($this->options['document_root']);
 
         // start a custom kernel if needed
         if ($this->options['kernel_environment'] != $this->kernel->getEnvironment() ||
@@ -86,32 +88,110 @@ class SymfonyHandler extends Handler
      */
     public function handle(Event $event)
     {
-        // get HttpMessage request
+        /** @var Request $request */
         $request = $event->getSubject();
+        /** @var ServerSocket $server */
+        $server  = $event->getParameter('server');
+        /** @var ClientSocket $client */
+        $client  = $event->getParameter('client');
 
-        $requestMethod = $request->getRequestMethod();
-        $requestUrl    = $request->getRequestUrl();
+        // collect parameters
+        $requestMethod  = $request->getRequestMethod();
+        $requestUrl     = $request->getRequestUrl();
+        $url            = parse_url($requestUrl);
+        $queryString    = isset($url['path']) ? $url['path'] : null;
+        // @TODO: fix script name, script filename & path_translated
+        $scriptName     = '/index.php';
 
-        // fake _SERVER environment
+        // GET & POST parameters
+        $getParameters  = array();
+        parse_str($queryString, $getParameters);
+
+        $postParameters = array();
+        if ($request->getRequestMethod() == Request::METHOD_POST) {
+            parse_str($request->getBody(), $postParameters);
+        }
+
+        // local & remote address:port
+        list($address, $port)             = explode(':', $server->getName());
+        list($remoteAddress, $remotePort) = explode(':', $client->getPeerName());
+
+        // fake _SERVER
+        // @see http://php.net/manual/de/reserved.variables.server.php
         $server = array(
-            'HTTP_HOST'       => $this->options['address'],
-            'SERVER_SOFTWARE' => 'Symfony '.Kernel::VERSION,
-            'SERVER_NAME'     => $this->options['address'],
-            'SERVER_ADDR'     => $this->options['address'],
-            'SERVER_PORT'     => $this->options['port'],
-            'DOCUMENT_ROOT'   => $this->options['document_root'],
-            'SCRIPT_FILENAME' => '/index.php',
-            'SERVER_PROTOCOL' => 'HTTP/'.$request->getHttpVersion(),
-            'REQUEST_METHOD'  => $requestMethod,
-            'QUERY_STRING'    => null,
-            'REQUEST_URI'     => $requestUrl,
-            'SCRIPT_NAME'     => '/index.php'
+            'SERVER_SIGNATURE'     => sprintf('<address>Symfony/%s (ServerBundle) Server at %s Port %d</address>', Kernel::VERSION, $this->options['hostname'], $port),
+            'SERVER_SOFTWARE'      => sprintf('Symfony/%s (ServerBundle)', Kernel::VERSION),
+            'SERVER_NAME'          => $this->options['hostname'],
+            'SERVER_ADDR'          => $address,
+            'SERVER_PORT'          => $port,
+            'SERVER_ADMIN'         => $this->options['admin'],
+            'GATEWAY_INTERFACE'    => 'CGI/1.1',
+            'SERVER_PROTOCOL'      => 'HTTP/'.$request->getHttpVersion(),
+            'REQUEST_METHOD'       => $requestMethod,
+            'REMOTE_ADDR'          => $remoteAddress,
+            'REMOTE_PORT'          => $remotePort,
+            'DOCUMENT_ROOT'        => $this->options['document_root'],
+            'QUERY_STRING'         => $queryString,
+            'REQUEST_URI'          => $requestUrl,
+            'REQUEST_TIME'         => $client->getAccepted(),
+            'PHP_SELF'             => $url['path'],
+            'SCRIPT_NAME'          => $scriptName,
+            'SCRIPT_FILENAME'      => $scriptFilename = $this->options['document_root'].$scriptName,
+            'PATH_INFO'            => str_replace($scriptName, '', $url['path']),
+            'PATH_TRANSLATED'      => $scriptFilename
         );
 
-        // @TODO: fake _GET, _POST, _REQUEST, _COOKIE, _FILES
-        $parameters = $cookies = $files = array();
+        // @TODO: PATH
+        // @TODO: AUTH > AUTH_TYPE, REMOTE_USER, REMOTE_IDENT
+        // @TODO: POST, PUT > CONTENT_TYPE, CONTENT_LENGTH
 
-        // @TODO: what's up w/ _SESSION?
+        // extend _SERVER
+        if ($request->getRequestMethod() == Request::METHOD_GET) {
+            $server['argv'] = $queryString;
+            $server['argc'] = count($getParameters);
+        }
+        if ($this->options['hostname_lookups']) {
+            $server['REMOTE_HOST'] = gethostbyaddr($remoteAddress);
+        }
+        if ($request->hasHeader('Host')) {
+            $server['HTTP_HOST'] = $request->getHeader('Host');
+        }
+        if ($request->hasHeader('Connection')) {
+            $server['HTTP_CONNECTION'] = $request->getHeader('Connection');
+        }
+        if ($request->hasHeader('User-Agent')) {
+            $server['HTTP_USER_AGENT'] = $request->getHeader('User-Agent');
+        }
+        if ($request->hasHeader('Accept')) {
+            $server['HTTP_ACCEPT'] = $request->getHeader('Accept');
+        }
+        if ($request->hasHeader('Accept-Encoding')) {
+            $server['HTTP_ACCEPT_ENCODING'] = $request->getHeader('Accept-Encoding');
+        }
+        if ($request->hasHeader('Accept-Language')) {
+            $server['HTTP_ACCEPT_LANGUAGE'] = $request->getHeader('Accept-Language');
+        }
+        if ($request->hasHeader('Accept-Charset')) {
+            $server['HTTP_ACCEPT_CHARSET'] = $request->getHeader('Accept-Charset');
+        }
+        if ($request->hasHeader('Cookie')) {
+            $server['HTTP_COOKIE'] = $request->getHeader('Cookie');
+        }
+        if ($request->hasHeader('Referer')) {
+            $server['HTTP_REFERER'] = $request->getHeader('Referer');
+        }
+
+        // fake _COOKIE
+        $cookies = array();
+        if ($request->hasHeader('Cookie')) {
+            parse_str($request->getHeader('Cookie'), $cookies);
+        }
+
+        // @TODO: php.ini - request_order > _REQUEST
+        $parameters = array_merge($getParameters, $postParameters);
+
+        // @TODO: fake _FILES
+        $files = array();
 
         // initialize SymfonyRequest
         $sfRequest = SymfonyRequest::create($requestUrl, $requestMethod, $parameters, $cookies, $files, $server);

@@ -72,4 +72,15 @@ interface SocketInterface
      * @return boolean
      */
     function setOption($option, $value, $level = SOL_SOCKET);
+
+    /**
+     * @return string
+     */
+    function getName();
+
+    /**
+     * @return string
+     */
+    function getPeerName();
+
 }
