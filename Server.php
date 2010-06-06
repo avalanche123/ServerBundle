@@ -136,7 +136,7 @@ class Server implements ServerInterface
      */
     protected function logConsole($type, $message, array $parameters = array())
     {
-        if (null !== $this->console && is_callable(array($this->console, $type))) {
+        if (!$this->isDaemon && null !== $this->console && is_callable(array($this->console, $type))) {
             call_user_func(array($this->console, $type), $message, $parameters);
         }
     }

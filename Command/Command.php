@@ -33,7 +33,7 @@ abstract class Command extends BaseCommand
         $this->container = $this->application->getKernel()->getContainer();
         $this->server    = $this->container->getServerService();
 
-        if ($input->getOption('verbose')) {
+        if (!$input->getOption('verbose')) {
             $this->server->setConsole(new Console($output));
         }
     }
