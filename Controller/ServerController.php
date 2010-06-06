@@ -21,14 +21,6 @@ use Symfony\Framework\WebBundle\Controller;
 abstract class ServerController extends Controller
 {
     /**
-     * @return Bundle\ServerBundle\DaemonInterface
-     */
-    public function getDaemon()
-    {
-        return $this->container->getDaemonService();
-    }
-
-    /**
      * @return Bundle\ServerBundle\ServerInterface
      */
     public function getServer()

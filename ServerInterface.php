@@ -32,18 +32,9 @@ interface ServerInterface
     function stop();
 
     /**
+     * @return boolean
      */
-    function shutdown();
-
-    /**
-     * @return DaemonInterface
-     */
-    function getDaemon();
-
-    /**
-     * @param DaemonInterface $daemon
-     */
-    function setDaemon(DaemonInterface $daemon);
+    function restart();
 
     /**
      * @return Console

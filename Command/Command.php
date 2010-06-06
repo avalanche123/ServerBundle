@@ -4,7 +4,8 @@ namespace Bundle\ServerBundle\Command;
 
 use Symfony\Components\Console\Input\InputInterface,
     Symfony\Components\Console\Output\OutputInterface,
-    Symfony\Components\Console\Command\Command as BaseCommand;
+    Symfony\Components\Console\Command\Command as BaseCommand,
+    Bundle\ServerBundle\Console;
 
 /*
  * This file is part of the ServerBundle package.
@@ -29,6 +30,11 @@ abstract class Command extends BaseCommand
      */
     protected function initialize(InputInterface $input, OutputInterface $output)
     {
-      $this->container = $this->application->getKernel()->getContainer();
+        $this->container = $this->application->getKernel()->getContainer();
+        $this->server    = $this->container->getServerService();
+
+        if ($input->getOption('verbose')) {
+            $this->server->setConsole(new Console($output));
+        }
     }
 }

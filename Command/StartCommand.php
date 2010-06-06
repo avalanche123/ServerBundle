@@ -6,7 +6,7 @@ use Symfony\Components\Console\Input\InputArgument,
     Symfony\Components\Console\Input\InputOption,
     Symfony\Components\Console\Input\InputInterface,
     Symfony\Components\Console\Output\OutputInterface,
-    Bundle\ServerBundle\Command\DaemonCommand;
+    Bundle\ServerBundle\Command\Command;
 
 /*
  * This file is part of the ServerBundle package.
@@ -22,7 +22,7 @@ use Symfony\Components\Console\Input\InputArgument,
  * @subpackage Command
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-class StartCommand extends DaemonCommand
+class StartCommand extends Command
 {
     /**
      * @see Command
@@ -59,22 +59,6 @@ class StartCommand extends DaemonCommand
          *   3) server.xml
          */
 
-        // get Server service
-        $server = $this->container->getServerService();
-
-        // start Server
-        if (!$input->getOption('daemonize')) {
-            if ($input->getOption('verbose')) {
-                $server->setConsole($this->console);
-            }
-
-            return $server->start();
-        }
-
-        // store Daemon service
-        $server->setDaemon($this->daemon);
-
-        // start Daemon
-        $this->daemon->start();
+        $this->server->start($input->getOption('daemonize'));
     }
 }

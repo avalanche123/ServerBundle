@@ -16,6 +16,10 @@
     <parameter key="server.compression_filter.class">Bundle\ServerBundle\Filter\CompressionFilter</parameter>
     <parameter key="server.statistics_filter.class">Bundle\ServerBundle\Filter\StatisticsFilter</parameter>
 
+    <parameter key="server.pid_file">%kernel.cache_dir%/server.pid</parameter>
+    <parameter key="server.user" type="constant">null</parameter>
+    <parameter key="server.group" type="constant">null</parameter>
+    <parameter key="server.umask" type="constant">null</parameter>
     <parameter key="server.address">*</parameter>
     <parameter key="server.port">1962</parameter>
     <parameter key="server.max_clients">100</parameter>
@@ -81,6 +85,10 @@
       <argument type="service" id="server.event_dispatcher" />
       <argument type="service" id="server.server_socket" />
       <argument type="collection">
+        <argument key="pid_file">%server.pid_file%</argument>
+        <argument key="user">%server.user%</argument>
+        <argument key="group">%server.group%</argument>
+        <argument key="umask">%server.umask%</argument>
         <argument key="environment">%kernel.environment%</argument>
         <argument key="debug">%kernel.debug%</argument>
         <argument key="kernel_environment">%server.kernel_environment%</argument>

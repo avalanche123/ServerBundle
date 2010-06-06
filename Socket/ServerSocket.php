@@ -34,9 +34,6 @@ class ServerSocket extends Socket
      *
      * @throws \InvalidArgumentException If address is not valid
      * @throws \InvalidArgumentException If port is not in valid range
-     * @throws \RuntimeException If socket creation fails
-     * @throws \RuntimeException If binding to socket fails
-     * @throws \RuntimeException If listening to socket fails
      */
     public function __construct(ContainerInterface $container, $address = '*', $port = 1962, $maxClients = 100)
     {
@@ -67,7 +64,17 @@ class ServerSocket extends Socket
         if (0 > $this->port || 65535 < $this->port) {
             throw new \InvalidArgumentException('The port number must range from 0 to 65535');
         }
+    }
 
+    /**
+     * @return boolean
+     *
+     * @throws \RuntimeException If socket creation fails
+     * @throws \RuntimeException If binding to socket fails
+     * @throws \RuntimeException If listening to socket fails
+     */
+    public function connect()
+    {
         $this->socket = @socket_create($this->isIPv6 ? AF_INET6 : AF_INET, SOCK_STREAM, SOL_TCP);
 
         if (false === $this->socket) {
@@ -86,7 +93,7 @@ class ServerSocket extends Socket
             throw new \RuntimeException(sprintf('Cannot listen to socket: %s', $this->getError()));
         }
 
-        $this->connected  = true;
+        return $this->connected = true;
     }
 
     /**

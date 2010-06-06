@@ -25,7 +25,6 @@ class ServerExtension extends LoaderExtension
 {
     protected $container;
     protected $resources = array(
-        'daemon' => 'daemon.xml',
         'server' => 'server.xml'
     );
 
@@ -42,44 +41,6 @@ class ServerExtension extends LoaderExtension
      * @param array $config
      * @return BuilderConfiguration
      *
-     * @throws \InvalidArgumentException If Daemon class does not implement DaemonInterface
-     */
-    public function daemonLoad($config)
-    {
-        $configuration = new BuilderConfiguration();
-
-        $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
-        $configuration->merge($loader->load($this->resources['daemon']));
-
-        if (isset($config['class'])) {
-            $this->checkServiceClassInterface('Daemon', $config['class'], 'Bundle\\ServerBundle\\DaemonInterface');
-
-            $configuration->setParameter('daemon.class', $config['class']);
-        }
-
-        if (isset($config['pid_file'])) {
-            $configuration->setParameter('daemon.pid_file', $config['pid_file']);
-        }
-
-        if (isset($config['user'])) {
-            $configuration->setParameter('daemon.user', $config['user']);
-        }
-
-        if (isset($config['group'])) {
-            $configuration->setParameter('daemon.group', $config['group']);
-        }
-
-        if (isset($config['umask'])) {
-            $configuration->setParameter('daemon.umask', $config['umask']);
-        }
-
-        return $configuration;
-    }
-
-    /**
-     * @param array $config
-     * @return BuilderConfiguration
-     *
      * @throws \InvalidArgumentException If Server class does not implement ServerInterface
      */
     public function serverLoad($config)
@@ -90,8 +51,20 @@ class ServerExtension extends LoaderExtension
         $configuration->merge($loader->load($this->resources['server']));
 
         // Server configuration
+        if (isset($config['pid_file'])) {
+            $configuration->setParameter('server.pid_file', $config['pid_file']);
+        }
+        if (isset($config['user'])) {
+            $configuration->setParameter('server.user', $config['user']);
+        }
+        if (isset($config['group'])) {
+            $configuration->setParameter('server.group', $config['group']);
+        }
+        if (isset($config['umask'])) {
+            $configuration->setParameter('server.umask', $config['umask']);
+        }
         if (isset($config['max_clients'])) {
-            $configuration->setParameter('server.max_clients');
+            $configuration->setParameter('server.max_clients', $config['max_clients']);
         }
         if (isset($config['max_requests_per_child'])) {
             $configuration->setParameter('server.max_requests_per_child', $config['max_requests_per_child']);
@@ -118,7 +91,7 @@ class ServerExtension extends LoaderExtension
         if (isset($config['class'])) {
             $this->checkServiceClassInterface('Server', $config['class'], 'Bundle\\ServerBundle\\ServerInterface');
 
-            $configuration->setParameter('daemon.class', $config['class']);
+            $configuration->setParameter('server.class', $config['class']);
         }
         if (isset($config['request'])) {
             $this->checkServiceClassInterface('Request', $config['request'], 'Bundle\\ServerBundle\\RequestInterface');

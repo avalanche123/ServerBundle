@@ -5,7 +5,6 @@ namespace Bundle\ServerBundle;
 use Bundle\ServerBundle\ServerInterface,
     Bundle\ServerBundle\EventDispatcher,
     Bundle\ServerBundle\Socket\ServerSocket,
-    Bundle\ServerBundle\DaemonInterface,
     Symfony\Components\Console\Output\OutputInterface,
     Bundle\ServerBundle\Request,
     Bundle\ServerBundle\Response,
@@ -30,7 +29,6 @@ use Bundle\ServerBundle\ServerInterface,
 class Server implements ServerInterface
 {
     protected $console;
-    protected $daemon;
     protected $dispatcher;
     protected $options;
     protected $clients;
@@ -53,12 +51,16 @@ class Server implements ServerInterface
         $this->dispatcher = $dispatcher;
         $this->server     = $server;
         $this->console    = null;
-        $this->daemon     = null;
+        $this->isDaemon   = false;
         $this->clients    = array();
         $this->shutdown   = false;
 
         // @see Resources/config/server.xml
         $this->options = array(
+            'pid_file'               => null,
+            'user'                   => null,
+            'group'                  => null,
+            'umask'                  => null,
             'environment'            => 'dev',
             'debug'                  => true,
             'kernel_environment'     => 'prod',
@@ -78,22 +80,37 @@ class Server implements ServerInterface
         }
 
         $this->options = array_merge($this->options, $options);
-    }
 
-    /**
-     * @param DaemonInterface $daemon
-     */
-    public function setDaemon(DaemonInterface $daemon)
-    {
-        $this->daemon = $daemon;
-    }
+        // convert user name to user id
+        if (null !== $this->options['user'] && !is_int($this->options['user'])) {
+            $user = posix_getpwnam($this->options['user']);
 
-    /**
-     * @return DaemonInterface
-     */
-    public function getDaemon()
-    {
-        return $this->daemon;
+            if (false === $user) {
+                throw new \InvalidArgumentException(sprintf('User "%s" does not exist', $this->options['user']));
+            }
+
+            $this->options['user'] = $user['uid'];
+        }
+
+        // convert group name to group id
+        if (null !== $this->options['group'] && !is_int($this->options['group'])) {
+            $group = posix_getgrnam($this->options['group']);
+
+            if (false === $group) {
+                throw new \InvalidArgumentException(sprintf('Group "%s" does not exist', $this->options['group']));
+            }
+
+            $this->options['group'] = $group['gid'];
+        }
+
+        if (null !== $this->options['umask']) {
+            umask($this->options['umask']);
+        }
+
+        declare(ticks = 1);
+
+        // pcntl signal handlers
+        pcntl_signal(SIGTERM, array($this, 'signalHandler'));
     }
 
     /**
@@ -125,12 +142,35 @@ class Server implements ServerInterface
     }
 
     /**
+     * @param integer $signo
+     */
+    public function signalHandler($signo)
+    {
+        switch ($signo) {
+            case SIGTERM:
+                $this->shutdown();
+            break;
+        }
+    }
+
+    /**
+     * @param boolean $daemon (optional)
      * @return boolean
      *
      * @throws \RuntimeException If Request was not handled
      */
-    public function start()
+    public function start($daemon = false)
     {
+        if (substr(PHP_OS, 0, 3) === 'WIN') {
+            throw new \RuntimeException('Cannot run on windows');
+        }
+
+        if (substr(PHP_SAPI, 0, 3) !== 'cli') {
+            throw new \RuntimeException('Can only run on CLI environment');
+        }
+
+        set_time_limit(0);
+
         // Symfony & ServerBundle informations
         $this->logConsole('info', 'Symfony <comment>%s</comment> (<comment>%s</comment>, <comment>%s</comment>), ServerBundle <comment>%s</comment> (<comment>%s</comment>, <comment>%s</comment>)', array(
             Kernel::VERSION, $this->options['environment'],
@@ -144,13 +184,79 @@ class Server implements ServerInterface
             phpversion(), PHP_SAPI, true === extension_loaded('pecl_http') ? 'with' : 'without'
         ));
 
-        // start options
-        $this->logConsole('info', 'Server#start(): pid=<comment>%d</comment>, address=<comment>%s</comment>, port=<comment>%d</comment>', array(
-            getmypid(), $this->options['address'], $this->options['port']
-        ));
+        // daemonize
+        if (true === $daemon) {
+            if (!function_exists('pcntl_fork')) {
+                throw new \RuntimeException('pcntl_* functions are required');
+            }
 
-        // stop server notice
-        $this->logConsole('info', 'To stop the server, type <comment>^C</comment>');
+            if (!function_exists('posix_kill')) {
+                throw new \RuntimeException('posix_* functions are required');
+            }
+
+            if (null !== $pid = $this->readPidFile()) {
+                throw new \RuntimeException(sprintf('Server already started with pid "%d"', $pid));
+            }
+
+            // @see http://www.php.net/manual/en/function.pcntl-fork.php#41150
+            @ob_end_flush();
+
+            pcntl_signal(SIGCHLD, SIG_IGN);
+
+            $pid = @pcntl_fork();
+
+            if ($pid === -1) {
+                throw new \RuntimeException('Forking process failed');
+            }
+
+            if ($pid === 0) {
+                $this->isDaemon = true;
+
+                sleep(1);
+
+                if (null !== $this->options['user']) {
+                    posix_setuid($this->options['user']);
+                }
+
+                if (null !== $this->options['group']) {
+                    posix_setgid($this->options['group']);
+                }
+
+                $this->writePidFile();
+
+                $this->run();
+
+                $this->removePidFile();
+
+                exit(0);
+            }
+
+            // start options
+            $this->logConsole('info', 'Server#start(): pid=<comment>%d</comment>, address=<comment>%s</comment>, port=<comment>%d</comment>', array(
+                $pid, $this->options['address'], $this->options['port']
+            ));
+        } else {
+            // start options
+            $this->logConsole('info', 'Server#start(): pid=<comment>%d</comment>, address=<comment>%s</comment>, port=<comment>%d</comment>', array(
+                getmypid(), $this->options['address'], $this->options['port']
+            ));
+
+            // stop server notice
+            $this->logConsole('info', 'To stop the server, type <comment>^C</comment>');
+
+            $this->run();
+        }
+
+        return true;
+    }
+
+    /**
+     * @return boolean
+     */
+    protected function run()
+    {
+        // connect server socket
+        $this->server->connect();
 
         // timers
         $start  = time();
@@ -169,7 +275,7 @@ class Server implements ServerInterface
         $sendTotal = 0;
 
         // disable max_requests_per_child in non-daemon mode
-        if (null === $this->daemon || !$this->daemon->isChild()) {
+        if (!$this->isDaemon) {
             $this->options['max_requests_per_child'] = 0;
         }
 
@@ -291,7 +397,21 @@ class Server implements ServerInterface
             $except = $this->createExceptSet();
         }
 
+        $this->stop();
+
         return true;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function restart()
+    {
+        if (true === $this->stop()) {
+            return $this->start(true);
+        }
+
+        return false;
     }
 
     /**
@@ -299,17 +419,32 @@ class Server implements ServerInterface
      */
     public function stop()
     {
-        foreach ($this->clients as $client) {
-            $client->disconnect();
+        $success = false;
+
+        // daemon
+        if ($pid = $this->readPidFile()) {
+            $status = 0;
+
+            posix_kill($pid, SIGKILL);
+            pcntl_waitpid($pid, $status, WNOHANG);
+            $success = pcntl_wifexited($status);
+
+            $this->removePidFile();
+        } else {
+            // disconnect clients
+            foreach ($this->clients as $client) {
+                $client->disconnect();
+            }
+
+            // disconnect server
+            $this->server->disconnect();
+
+            $success = true;
         }
 
-        foreach ($this->servers as $server) {
-            $server->disconnect();
-        }
+        $this->logConsole($success ? 'info' : 'error', 'Server#stop(): %s', array($success ? 'okay' : 'failed'));
 
-        $this->logConsole('info', 'Server#stop(): okay');
-
-        return true;
+        return $success;
     }
 
     /**
@@ -318,6 +453,50 @@ class Server implements ServerInterface
     public function shutdown()
     {
         $this->shutdown = true;
+    }
+
+    /**
+     * @return null|integer
+     */
+    protected function readPidFile()
+    {
+        if (null === $this->options['pid_file'] || !is_readable($this->options['pid_file'])) {
+            return null;
+        }
+
+        return file_get_contents($this->options['pid_file']);
+    }
+
+    /**
+     * @return boolean
+     *
+     * @throws \RuntimeException If pid file already exist
+     */
+    protected function writePidFile()
+    {
+        if (null === $this->options['pid_file']) {
+            return true;
+        }
+
+        if (is_readable($this->options['pid_file'])) {
+            throw new \RuntimeException(sprintf('Pid file "%s" already exist', $this->options['pid_file']));
+        }
+
+        return file_put_contents($this->options['pid_file'], getmypid()) > 0;
+    }
+
+    /**
+     * @return boolean
+     *
+     * @throws \RuntimeException If pid file is not writeable
+     */
+    protected function removePidFile()
+    {
+        if (!is_writeable($this->options['pid_file'])) {
+            throw new \RuntimeException(sprintf('Cannot delete pid file "%s"', $this->options['pid_file']));
+        }
+
+        return unlink($this->options['pid_file']);
     }
 
     /**
