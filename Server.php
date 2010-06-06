@@ -300,7 +300,7 @@ class Server implements ServerInterface
                         $client = $this->findSocket($socket);
 
                         /** @var $request Request */
-                        $request = $client->readResponse();
+                        $request = $client->readRequest();
 
                         // Request read?
                         if (false === $request) {

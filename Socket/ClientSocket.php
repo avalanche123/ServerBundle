@@ -59,7 +59,7 @@ class ClientSocket extends Socket
     /**
      * @return Request
      */
-    public function readResponse()
+    public function readRequest()
     {
         if (null !== $this->request) {
             return $this->request;
