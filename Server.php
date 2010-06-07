@@ -111,6 +111,8 @@ class Server implements ServerInterface
         declare(ticks = 1);
 
         // pcntl signal handlers
+        pcntl_signal(SIGHUP, array($this, 'signalHandler'));
+        pcntl_signal(SIGINT, array($this, 'signalHandler'));
         pcntl_signal(SIGTERM, array($this, 'signalHandler'));
     }
 
@@ -148,6 +150,8 @@ class Server implements ServerInterface
     public function signalHandler($signo)
     {
         switch ($signo) {
+            case SIGHUP:
+            case SIGINT:
             case SIGTERM:
                 $this->shutdown();
             break;
