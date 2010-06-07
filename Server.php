@@ -43,6 +43,8 @@ class Server implements ServerInterface
      * @param array $options (optional)
      *
      * @throws \InvalidArgumentException When an unsupported option is provided
+     * @throws \InvalidArgumentException If provided user does not exist
+     * @throws \InvalidArgumentException If provided group does not exist
      * @throws \InvalidArgumentException If an invalid socket client class is provided
      * @throws \InvalidArgumentException If an invalid socket server class is provided
      * @throws \InvalidArgumentException If an invalid socket server client class is provided
@@ -162,7 +164,12 @@ class Server implements ServerInterface
      * @param boolean $daemon (optional)
      * @return boolean
      *
-     * @throws \RuntimeException If Request was not handled
+     * @throws \RuntimeException If you run this server on a Windows
+     * @throws \RuntimeException If you run this server not in CLI environment
+     * @throws \RuntimeException If pcntl_* functions are not available
+     * @throws \RuntimeException If posix_* functions are not available
+     * @throws \RuntimeException If the server is already started
+     * @throws \RuntimeException If the process forking fails
      */
     public function start($daemon = false)
     {
@@ -257,6 +264,8 @@ class Server implements ServerInterface
 
     /**
      * @return boolean
+     *
+     * @throws \RuntimeException If Request was not handled
      */
     protected function run()
     {
