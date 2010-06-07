@@ -25,13 +25,31 @@ use Bundle\ServerBundle\Filter\FilterInterface,
 class CompressionFilter implements FilterInterface
 {
     protected $enabled;
+    protected $encodings;
 
     /**
      * @param boolean $enabled
+     *
+     * @throws \RuntimeException If compression is enabled but gz* function are not available
      */
     public function __construct($enabled = false)
     {
-        $this->enabled = $enabled;
+        $this->enabled   = $enabled;
+        $this->encodings = array();
+
+        if (false !== $this->enabled) {
+            if (function_exists('gzdeflate')) {
+                $this->encodings[] = 'deflate';
+            }
+
+            if (function_exists('gzencode')) {
+                $this->encodings[] = 'gzip';
+            }
+
+            if (count($this->encodings) == 0) {
+                throw new \RuntimeException('gz* functions are required');
+            }
+        }
     }
 
     /**
@@ -53,20 +71,25 @@ class CompressionFilter implements FilterInterface
      */
     public function filter(Event $event, ResponseInterface $response)
     {
-        // $request = $event->getSubject();
+        $request = $event->getSubject();
+
+        if ($request->hasHeader('Accept-Encoding')) {
+            $encodings = explode(',', $request->getHeader('Accept-Encoding'));
+
+            foreach ($encodings as $encoding) {
+                $encoding = strtolower($encoding);
+
+                if (in_array($encoding, $this->encodings)) {
+                    $response->setBody($compressed = call_user_func(array($this, $encoding), $response->getBody()));
+                    $response->setHeader('Content-Encoding', $encoding);
+                    $response->setHeader('Content-Length', strlen($compressed));
+
+                    return $response;
+                }
+            }
+        }
 
         return $response;
-
-        // parse headers, check which compression is available
-
-        // determine best (deflate > gzip) for available compressions
-
-        // compress data
-        // $data = $this->deflate($date);
-        // $data = $this->gzip($data)
-
-        // @TODO must be clarified how the dispatching of the event works
-        // return $event / $data / whatever
     }
 
     /**
@@ -75,7 +98,7 @@ class CompressionFilter implements FilterInterface
      */
     protected function deflate($data)
     {
-      return gzdeflate($data, 9);
+      return gzdeflate($data /*, $this->level */);
     }
 
     /**
@@ -84,6 +107,6 @@ class CompressionFilter implements FilterInterface
      */
     protected function gzip($data)
     {
-      return gzcompress($data, 9);
+      return gzencode($data /*, $this->level */);
     }
 }
