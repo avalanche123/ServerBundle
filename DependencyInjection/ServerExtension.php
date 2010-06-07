@@ -24,9 +24,7 @@ use Symfony\Components\DependencyInjection\Loader\LoaderExtension,
 class ServerExtension extends LoaderExtension
 {
     protected $container;
-    protected $resources = array(
-        'server' => 'server.xml'
-    );
+    protected $resources;
 
     /**
      *
@@ -35,20 +33,24 @@ class ServerExtension extends LoaderExtension
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
+        $this->resources = array(
+            'server' => 'server.xml'
+        );
     }
 
     /**
      * @param array $config
+     * @param BuilderConfiguration $configuration
      * @return BuilderConfiguration
      *
      * @throws \InvalidArgumentException If Server class does not implement ServerInterface
      */
-    public function serverLoad($config)
+    public function serverLoad(array $config, BuilderConfiguration $configuration)
     {
-        $configuration = new BuilderConfiguration();
-
-        $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
-        $configuration->merge($loader->load($this->resources['server']));
+        if (!$configuration->hasDefinition('server')) {
+            $loader = new XmlFileLoader(__DIR__.'/../Resources/config');
+            $configuration->merge($loader->load($this->resources['server']));
+        }
 
         // Options
         $options = array(
