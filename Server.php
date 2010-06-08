@@ -359,14 +359,23 @@ class Server implements ServerInterface
 
                         // Response status
                         $message = $response->isSuccessful()
-                                 ? '<info>%d %s</info> (<comment>%d</comment> bytes)'
-                                 : '<error>%d %s</error> (<comment>%d</comment> bytes)';
+                                 ? '<info>%d %s</info> (<comment>%d</comment> bytes%s)'
+                                 : '<error>%d %s</error> (<comment>%d</comment> bytes%s)';
+
+                        // Compression status
+                        $compression = '';
+                        if ($event->hasParameter('compression') && $event->getParameter('compression')) {
+                            $compression = sprintf(' [<comment>%s/%d</comment>]',
+                                $event->getParameter('compression.encoding'),
+                                $event->getParameter('compression.level')
+                            );
+                        }
 
                         // Response informations
                         $this->logConsole('response', $message, array(
                             $response->getStatusCode(),
                             $response->getStatusText(),
-                            $send
+                            $send, $compression
                         ));
 
                         // @TODO is that correct, here?

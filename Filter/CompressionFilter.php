@@ -99,9 +99,16 @@ class CompressionFilter implements FilterInterface
                 $encoding = strtolower($encoding);
 
                 if (in_array($encoding, $this->encodings)) {
-                    $response->setBody($compressed = call_user_func(array($this, $encoding), $response->getBody()));
+                    $response->setBody($compressed = call_user_func(array($this, $encoding), $body = $response->getBody()));
                     $response->setHeader('Content-Encoding', $encoding);
-                    $response->setHeader('Content-Length', strlen($compressed));
+                    $response->setHeader('Content-Length', $length = strlen($compressed));
+
+                    // add compression statistics
+                    $event->setParameter('compression', true);
+                    $event->setParameter('compression.encoding', $encoding);
+                    $event->setParameter('compression.level', $this->level);
+                    $event->setParameter('compression.before', strlen($body));
+                    $event->setParameter('compression.after',  $length);
 
                     return $response;
                 }
