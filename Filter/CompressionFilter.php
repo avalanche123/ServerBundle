@@ -58,6 +58,11 @@ class CompressionFilter implements FilterInterface
                 $this->encodings[] = 'gzip';
             }
 
+            // LZF
+            if (function_exists('lzf_compress')) {
+                $this->encodings[] = 'lzf';
+            }
+
             // disable if no encoding is available
             if (count($this->encodings) == 0) {
                 $this->enabled = false;
@@ -145,5 +150,16 @@ class CompressionFilter implements FilterInterface
     protected function gzip($data)
     {
         return gzencode($data /*, $this->level */);
+    }
+
+    /**
+     * LZF compression.
+     *
+     * @param string $data
+     * @return string
+     */
+    protected function lzf($data)
+    {
+        return lzf_compress($data);
     }
 }
