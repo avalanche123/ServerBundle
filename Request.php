@@ -202,6 +202,30 @@ class Request implements RequestInterface, \Serializable
     }
 
     /**
+     * @see Symfony\Components\HttpKernel\Request::splitHttAcceptHeader()
+     */
+    public function splitHttpAcceptHeader($header)
+    {
+        $values = array();
+        foreach (array_filter(explode(',', $header)) as $value) {
+            if ($pos = strpos($value, ';')) {
+                $q     = (float) trim(substr($value, strpos($value, '=') + 1));
+                $value = trim(substr($value, 0, $pos));
+            } else {
+                $q = 1;
+            }
+
+            if (0 < $q) {
+                $values[trim($value)] = $q;
+            }
+        }
+
+        arsort($values);
+
+        return array_keys($values);
+    }
+
+    /**
      * @see \Serializable
      */
     public function serialize()
