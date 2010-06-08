@@ -36,6 +36,7 @@
     
     <parameter key="server.document_root">%kernel.root_dir%/../web</parameter>
     <parameter key="server.compression" type="constant">false</parameter>
+    <parameter key="server.compression_level">-1</parameter>
   </parameters>
 
   <services>
@@ -65,6 +66,7 @@
     <service id="server.compression_filter" class="%server.compression_filter.class%">
       <annotation name="server.response_filter" />
       <argument>%server.compression%</argument>
+      <argument>%server.compression_level%</argument>
     </service>
     <service id="server.statistics_filter" class="%server.statistics_filter.class%">
       <annotation name="server.response_filter" />

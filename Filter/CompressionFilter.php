@@ -26,16 +26,19 @@ class CompressionFilter implements FilterInterface
 {
     protected $enabled;
     protected $encodings;
+    protected $level;
 
     /**
      * @param boolean $enabled
+     * @param integer $level (optional)
      *
      * @throws \RuntimeException If compression is enabled but gz* function are not available
      */
-    public function __construct($enabled = false)
+    public function __construct($enabled = false, $level = -1)
     {
         $this->enabled   = $enabled;
         $this->encodings = array();
+        $this->level     = $level;
 
         if (false !== $this->enabled) {
             // bzip2
@@ -116,7 +119,7 @@ class CompressionFilter implements FilterInterface
      */
     protected function bzip2($data)
     {
-        return bzcompress($data /*, $this->level */);
+        return bzcompress($data, $this->level);
     }
 
     /**
@@ -127,7 +130,7 @@ class CompressionFilter implements FilterInterface
      */
     protected function compress($data)
     {
-        return gzcompress($data /*, $this->level */);
+        return gzcompress($data, $this->level);
     }
 
     /**
@@ -138,7 +141,7 @@ class CompressionFilter implements FilterInterface
      */
     protected function deflate($data)
     {
-        return gzdeflate($data /*, $this->level */);
+        return gzdeflate($data, $this->level);
     }
 
     /**
@@ -149,7 +152,7 @@ class CompressionFilter implements FilterInterface
      */
     protected function gzip($data)
     {
-        return gzencode($data /*, $this->level */);
+        return gzencode($data, $this->level);
     }
 
     /**

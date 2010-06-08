@@ -56,7 +56,8 @@ class ServerExtension extends LoaderExtension
         $options = array(
             'pid_file', 'user', 'group', 'umask', 'hostname', 'admin',
             'hostname_lookups', 'max_clients', 'max_requests_per_child',
-            'address', 'port', 'timeout', 'keepalive_timeout', 'compression'
+            'address', 'port', 'timeout', 'keepalive_timeout', 'compression',
+            'compression_level'
         );
 
         // General
