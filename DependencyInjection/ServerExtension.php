@@ -56,7 +56,7 @@ class ServerExtension extends LoaderExtension
         $options = array(
             'pid_file', 'user', 'group', 'umask', 'hostname', 'admin',
             'hostname_lookups', 'max_clients', 'max_requests_per_child',
-            'address', 'port', 'timeout', 'keepalive_timeout',
+            'address', 'port', 'timeout', 'keepalive_timeout', 'compression'
         );
 
         // General
@@ -105,8 +105,6 @@ class ServerExtension extends LoaderExtension
             if ($config['environment'] != $this->container->getParameter('kernel.environment')) {
                 $configuration->setParameter('kernel.include_core_classes', false);
             }
-        } else {
-            $configuration->setParameter('server.kernel_environment', $this->container->getParameter('kernel.environment'));
         }
         if (array_key_exists('debug', $config)) {
             $configuration->setParameter('server.kernel_debug', $config['debug']);
@@ -115,8 +113,6 @@ class ServerExtension extends LoaderExtension
             if ($config['debug'] != $this->container->getParameter('kernel.debug')) {
                 $configuration->setParameter('kernel.include_core_classes', false);
             }
-        } else {
-            $configuration->setParameter('server.kernel_debug', $this->container->getParameter('kernel.debug'));
         }
 
         // Filters
@@ -132,9 +128,6 @@ class ServerExtension extends LoaderExtension
         }
 
         // Filter configuration
-        if (array_key_exists('compression', $config)) {
-            $configuration->setParameter('server.compression', $config['compression']);
-        }
 
         return $configuration;
     }

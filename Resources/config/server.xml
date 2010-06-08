@@ -20,17 +20,22 @@
     <parameter key="server.user" type="constant">null</parameter>
     <parameter key="server.group" type="constant">null</parameter>
     <parameter key="server.umask" type="constant">null</parameter>
+
     <parameter key="server.hostname">localhost</parameter>
     <parameter key="server.admin">root@localhost</parameter>
     <parameter key="server.hostname_lookups" type="constant">false</parameter>
+    <parameter key="server.kernel_environment">%kernel.environment%</parameter>
+    <parameter key="server.kernel_debug">%kernel.debug%</parameter>
+
     <parameter key="server.address">*</parameter>
     <parameter key="server.port">1962</parameter>
     <parameter key="server.max_clients">100</parameter>
     <parameter key="server.max_requests_per_child">1000</parameter>
+    <parameter key="server.timeout">90</parameter>
+    <parameter key="server.keepalive_timeout">15</parameter>
+    
     <parameter key="server.document_root">%kernel.root_dir%/../web</parameter>
     <parameter key="server.compression" type="constant">false</parameter>
-    <parameter key="server.timeout">90</parameter>
-    <parameter key="server.keepalive_timeout">15</parameter> 
   </parameters>
 
   <services>
