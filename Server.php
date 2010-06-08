@@ -183,17 +183,13 @@ class Server implements ServerInterface
 
         set_time_limit(0);
 
-        // Symfony & ServerBundle informations
-        $this->logConsole('info', 'Symfony <comment>%s</comment> (<comment>%s</comment>, <comment>%s</comment>), ServerBundle <comment>%s</comment> (<comment>%s</comment>, <comment>%s</comment>)', array(
+        // informations
+        $this->logConsole('info', 'Symfony <comment>%s</comment> (<comment>%s</comment>, <comment>%s</comment>), ServerBundle <comment>%s</comment> (<comment>%s</comment>, <comment>%s</comment>), PHP/<comment>%s</comment> [%s]', array(
             Kernel::VERSION, $this->options['environment'],
             true === $this->options['debug'] ? 'debug' : 'non-debug',
             Bundle::VERSION, $this->options['kernel_environment'],
-            true === $this->options['kernel_debug'] ? 'debug' : 'non-debug'
-        ));
-
-        // PHP informations
-        $this->logConsole('info', 'PHP/<comment>%s</comment> [%s] <comment>%s</comment> pecl_http', array(
-            phpversion(), PHP_SAPI, true === extension_loaded('pecl_http') ? 'with' : 'without'
+            true === $this->options['kernel_debug'] ? 'debug' : 'non-debug',
+            phpversion(), PHP_SAPI
         ));
 
         // daemonize
