@@ -38,16 +38,29 @@ class CompressionFilter implements FilterInterface
         $this->encodings = array();
 
         if (false !== $this->enabled) {
+            // bzip2
+            if (function_exists('bzcompress')) {
+                $this->encodings[] = 'bzip2';
+            }
+
+            // compress
+            if (function_exists('gzcompress')) {
+                $this->encodings[] = 'compress';
+            }
+
+            // deflate
             if (function_exists('gzdeflate')) {
                 $this->encodings[] = 'deflate';
             }
 
+            // gzip
             if (function_exists('gzencode')) {
                 $this->encodings[] = 'gzip';
             }
 
+            // disable if no encoding is available
             if (count($this->encodings) == 0) {
-                throw new \RuntimeException('gz* functions are required');
+                $this->enabled = false;
             }
         }
     }
@@ -74,9 +87,7 @@ class CompressionFilter implements FilterInterface
         $request = $event->getSubject();
 
         if ($request->hasHeader('Accept-Encoding')) {
-            $encodings = explode(',', $request->getHeader('Accept-Encoding'));
-
-            foreach ($encodings as $encoding) {
+            foreach ($request->splitHttpAcceptHeader($request->getHeader('Accept-Encoding')) as $encoding) {
                 $encoding = strtolower($encoding);
 
                 if (in_array($encoding, $this->encodings)) {
@@ -93,20 +104,46 @@ class CompressionFilter implements FilterInterface
     }
 
     /**
+     * bzip2 format.
+     *
+     * @param string $data
+     * @return string
+     */
+    protected function bzip2($data)
+    {
+        return bzcompress($data /*, $this->level */);
+    }
+
+    /**
+     * UNIX "compress" programm.
+     *
+     * @param string $data
+     * @return string
+     */
+    protected function compress($data)
+    {
+        return gzcompress($data /*, $this->level */);
+    }
+
+    /**
+     * zlib format with "deflate" compression.
+     *
      * @param string $data
      * @return string
      */
     protected function deflate($data)
     {
-      return gzdeflate($data /*, $this->level */);
+        return gzdeflate($data /*, $this->level */);
     }
 
     /**
+     * GNU zip format.
+     *
      * @param string $data
      * @return string
      */
     protected function gzip($data)
     {
-      return gzencode($data /*, $this->level */);
+        return gzencode($data /*, $this->level */);
     }
 }
