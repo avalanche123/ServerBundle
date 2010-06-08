@@ -108,7 +108,7 @@ class ServerExtension extends LoaderExtension
         } else {
             $configuration->setParameter('server.kernel_environment', $this->container->getParameter('kernel.environment'));
         }
-        if (isset($config['debug'])) {
+        if (array_key_exists('debug', $config)) {
             $configuration->setParameter('server.kernel_debug', $config['debug']);
 
             // fixes class redeclaration error on custom kernel debug mode
@@ -132,7 +132,7 @@ class ServerExtension extends LoaderExtension
         }
 
         // Filter configuration
-        if (isset($config['compression'])) {
+        if (array_key_exists('compression', $config)) {
             $configuration->setParameter('server.compression', $config['compression']);
         }
 
