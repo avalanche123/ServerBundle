@@ -2,7 +2,7 @@
 
 namespace Bundle\ServerBundle;
 
-use Symfony\Foundation\Bundle\Bundle as BaseBundle,
+use Symfony\Foundation\Bundle\Bundle,
     Symfony\Components\DependencyInjection\ContainerInterface,
     Symfony\Components\DependencyInjection\Loader\Loader,
     Bundle\ServerBundle\DependencyInjection\ServerExtension;
@@ -21,15 +21,18 @@ use Symfony\Foundation\Bundle\Bundle as BaseBundle,
  * @subpackage Bundle
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-class Bundle extends BaseBundle
+class ServerBundle extends Bundle
 {
     const VERSION = '1.0.0-DEV';
 
     /**
-     * @param ContainerInterface $container
+     * @param Symfony\Components\DependencyInjection\ContainerInterface $container
+     * @return Symfony\Components\DependencyInjection\ContainerInterface
      */
     public function buildContainer(ContainerInterface $container)
     {
         Loader::registerExtension(new ServerExtension($container));
+
+        return $container;
     }
 }
