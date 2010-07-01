@@ -25,7 +25,7 @@ use Bundle\ServerBundle\Handler\Handler,
 class Error404Handler extends Handler
 {
     /**
-     * @param EventDispatcher $dispatcher
+     * @param Symfony\Components\EventDispatcher\EventDispatcher $dispatcher
      */
     public function register(EventDispatcher $dispatcher)
     {
@@ -33,9 +33,9 @@ class Error404Handler extends Handler
     }
 
     /**
-     * @param Event $event
+     * @param Symfony\Components\EventDispatcher\Event $event
      *
-     * @see EventDispatcher::notifyUntil()
+     * @see Symfony\Components\EventDispatcher\EventDispatcher::notifyUntil()
      */
     public function handle(Event $event)
     {

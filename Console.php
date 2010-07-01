@@ -23,7 +23,7 @@ class Console
     protected $output;
 
     /**
-     * @param OutputInterface $output
+     * @param Symfony\Components\Console\Output\OutputInterface $output
      */
     public function __construct(OutputInterface $output)
     {

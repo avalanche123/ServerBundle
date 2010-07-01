@@ -2,15 +2,15 @@
 
 namespace Bundle\ServerBundle;
 
-use Bundle\ServerBundle\ServerInterface,
-    Bundle\ServerBundle\EventDispatcher,
+use Bundle\ServerBundle\EventDispatcher,
+    Bundle\ServerBundle\ServerInterface,
     Bundle\ServerBundle\Socket\ServerSocket,
     Symfony\Components\Console\Output\OutputInterface,
     Bundle\ServerBundle\Request,
     Bundle\ServerBundle\Response,
     Symfony\Components\EventDispatcher\Event,
     Symfony\Foundation\Kernel,
-    Bundle\ServerBundle\Bundle;
+    Bundle\ServerBundle\ServerBundle;
 
 /*
  * This file is part of the ServerBundle package.
@@ -38,8 +38,8 @@ class Server implements ServerInterface
     protected $startTime;
 
     /**
-     * @param EventDispatcher $dispatcher
-     * @param ServerSocket $server
+     * @param Bundle\ServerBundle\EventDispatcher $dispatcher
+     * @param Bundle\ServerBundle\Socket\ServerSocket $server
      * @param array $options (optional)
      *
      * @throws \InvalidArgumentException When an unsupported option is provided
@@ -119,7 +119,7 @@ class Server implements ServerInterface
     }
 
     /**
-     * @return Console
+     * @return Bundle\ServerBundle\Console
      */
     public function getConsole()
     {
@@ -127,7 +127,7 @@ class Server implements ServerInterface
     }
 
     /**
-     * @param Console $console
+     * @param Bundle\ServerBundle\Console $console
      */
     public function setConsole(Console $console)
     {
@@ -308,7 +308,7 @@ class Server implements ServerInterface
                     if ($this->isClientSocket($socket)) {
                         $client = $this->findSocket($socket);
 
-                        /** @var $request Request */
+                        /** @var $request Bundle\ServerBundle\RequestInterface */
                         $request = $client->readRequest();
 
                         // Request read?
@@ -323,7 +323,7 @@ class Server implements ServerInterface
                             $request->getRequestUrl()
                         ));
 
-                        /** @var $event Event */
+                        /** @var $event Symfony\Components\EventDispatcher\Event */
                         $event = $this->dispatcher->notifyUntil(
                             new Event($request, 'server.request', array(
                                 'server' => $this->server,
@@ -336,10 +336,10 @@ class Server implements ServerInterface
                             throw new \RuntimeException('Request is not handled');
                         }
 
-                        /** @var $response Response */
+                        /** @var $response Bundle\ServerBundle\ResponseInterface */
                         $response = $event->getReturnValue();
 
-                        /** @var $event Event */
+                        /** @var $event Symfony\Components\EventDispatcher\Event */
                         $event = $this->dispatcher->filter(
                             new Event($request, 'server.response', array(
                                 'server' => $this->server,
@@ -348,7 +348,7 @@ class Server implements ServerInterface
                             $response
                         );
 
-                        /** @var $response Response */
+                        /** @var $response Bundle\ServerBundle\ResponseInterface */
                         $response = $event->getReturnValue();
 
                         // @TODO add response checks?
@@ -481,7 +481,7 @@ class Server implements ServerInterface
     }
 
     /**
-     * @return null|integer
+     * @return mixed
      */
     protected function readPidFile()
     {
@@ -607,7 +607,7 @@ class Server implements ServerInterface
 
     /**
      * @param resource $socket
-     * @return null|SocketInterface
+     * @return mixed
      *
      * @throws \InvalidArgumentException If socket is not a valid resource
      */

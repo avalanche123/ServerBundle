@@ -22,7 +22,7 @@ use Symfony\Components\EventDispatcher\EventDispatcher as BaseEventDispatcher,
 class EventDispatcher extends BaseEventDispatcher
 {
     /**
-     * @param ContainerInterface $container
+     * @param Symfony\Components\DependencyInjection\ContainerInterface $container
      */
     public function __construct(ContainerInterface $container)
     {

@@ -34,8 +34,8 @@ class SymfonyHandler extends Handler
     protected $options;
 
     /**
-     * @param ContainerInterface $container
-     * @param KernelInterface $kernel
+     * @param Symfony\Components\DependencyInjection\ContainerInterface $container
+     * @param Symfony\Components\HttpKernel\HttpKernelInterface $kernel
      * @param array $options (optional)
      */
     public function __construct(ContainerInterface $container, HttpKernelInterface $kernel, array $options)
@@ -74,7 +74,7 @@ class SymfonyHandler extends Handler
     }
 
     /**
-     * @param EventDispatcher $dispatcher
+     * @param Symfony\Components\EventDispatcher\EventDispatcher $dispatcher
      */
     public function register(EventDispatcher $dispatcher)
     {
@@ -82,17 +82,17 @@ class SymfonyHandler extends Handler
     }
 
     /**
-     * @param Event $event
+     * @param Symfony\Components\EventDispatcher\Event $event
      *
-     * @see EventDispatcher::notifyUntil()
+     * @see Symfony\Components\EventDispatcher\EventDispatcher::notifyUntil()
      */
     public function handle(Event $event)
     {
-        /** @var Request $request */
+        /** @var Bundle\ServerBundle\RequestInterface $request */
         $request = $event->getSubject();
-        /** @var ServerSocket $server */
+        /** @var Bundle\ServerBundle\Socket\ServerSocket $server */
         $server  = $event->getParameter('server');
-        /** @var ClientSocket $client */
+        /** @var Bundle\ServerBundle\Socket\ClientSocket $client */
         $client  = $event->getParameter('client');
 
         // collect parameters
@@ -199,8 +199,10 @@ class SymfonyHandler extends Handler
         try
         {
             if (null !== $this->customKernel) {
+                /** @var $sfResponse Symfony\Components\HttpKernel\Response */
                 $sfResponse = $this->customKernel->handle($sfRequest);
             } else {
+                /** @var $sfResponse Symfony\Components\HttpKernel\Response */
                 $sfResponse = $this->kernel->handle($sfRequest);
             }
         } catch (\Exception $e) {

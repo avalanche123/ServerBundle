@@ -3,6 +3,7 @@
 namespace Bundle\ServerBundle\Socket;
 
 use Bundle\ServerBundle\Socket\Socket,
+    Bundle\ServerBundle\Socket\ServerSocket,
     Bundle\ServerBundle\Request,
     Bundle\ServerBundle\Response,
     Symfony\Foundation\Kernel,
@@ -35,7 +36,7 @@ class ClientSocket extends Socket
     protected $keepAliveTimeout;
 
     /**
-     * @param ServerSocket $server
+     * @param Bundle\ServerBundle\Socket\ServerSocket $server
      * @param integer $timeout (optional)
      * @param integer $keepAliveTimeout (optional)
      */
@@ -57,7 +58,7 @@ class ClientSocket extends Socket
     }
 
     /**
-     * @return Request
+     * @return Bundle\ServerBundle\RequestInterface
      */
     public function readRequest()
     {
@@ -96,7 +97,7 @@ class ClientSocket extends Socket
     }
 
     /**
-     * @return Request
+     * @return Bundle\ServerBundle\RequestInterface
      */
     public function getRequest()
     {
@@ -104,7 +105,7 @@ class ClientSocket extends Socket
     }
 
     /**
-     * @param Response $response
+     * @param Bundle\ServerBundle\ResponseInterface $response
      */
     public function sendResponse(Response $response = null)
     {
@@ -150,7 +151,7 @@ class ClientSocket extends Socket
     }
 
     /**
-     * @return Response
+     * @return Bundle\ServerBundle\ResponseInterface
      */
     public function getResponse()
     {

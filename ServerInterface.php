@@ -2,8 +2,7 @@
 
 namespace Bundle\ServerBundle;
 
-use Bundle\ServerBundle\DaemonInterface,
-    Bundle\ServerBundle\Console;
+use Bundle\ServerBundle\Console;
 
 /*
  * This file is part of the ServerBundle package.
@@ -37,12 +36,12 @@ interface ServerInterface
     function restart();
 
     /**
-     * @return Console
+     * @return Bundle\ServerBundle\Console
      */
     function getConsole();
 
     /**
-     * @param Console $console
+     * @param Bundle\ServerBundle\Console $console
      */
     function setConsole(Console $console);
 }

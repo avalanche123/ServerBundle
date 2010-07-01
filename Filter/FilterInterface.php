@@ -22,7 +22,7 @@ use Symfony\Components\EventDispatcher\EventDispatcher,
 interface FilterInterface
 {
     /**
-     * @param EventDispatcher $dispatcher
+     * @param Symfony\Components\EventDispatcher\EventDispatcher $dispatcher
      */
     function register(EventDispatcher $dispatcher);
 }

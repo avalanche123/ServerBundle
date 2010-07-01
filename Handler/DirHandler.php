@@ -28,7 +28,7 @@ class DirHandler extends Handler
     protected $documentRoot;
 
     /**
-     * @param ContainerInterface $container
+     * @param Symfony\Components\DependencyInjection\ContainerInterface $container
      * @param string $documentRoot
      */
     public function __construct(ContainerInterface $container, $documentRoot)
@@ -39,7 +39,7 @@ class DirHandler extends Handler
     }
 
     /**
-     * @param EventDispatcher $dispatcher
+     * @param Symfony\Components\EventDispatcher\EventDispatcher $dispatcher
      */
     public function register(EventDispatcher $dispatcher)
     {
@@ -47,9 +47,9 @@ class DirHandler extends Handler
     }
 
     /**
-     * @param Event $event
+     * @param Symfony\Components\EventDispatcher\Event $event
      *
-     * @see EventDispatcher::notifyUntil()
+     * @see Symfony\Components\EventDispatcher\EventDispatcher::notifyUntil()
      */
     public function handle(Event $event)
     {

@@ -21,7 +21,7 @@ use Bundle\ServerBundle\Controller\ServerController;
 class DefaultController extends ServerController
 {
     /**
-     * @return Response
+     * @return Symfony\Components\HttpKernel\Response
      */
     public function infoAction()
     {
@@ -29,7 +29,7 @@ class DefaultController extends ServerController
     }
 
     /**
-     * @return Response
+     * @return Symfony\Components\HttpKernel\Response
      */
     public function statusAction()
     {

@@ -25,6 +25,7 @@ abstract class Socket implements SocketInterface
     protected $blocked;
 
     /**
+     * @param resource $socket (optional)
      * @return void
      */
     public function __construct($socket = null)

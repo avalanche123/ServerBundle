@@ -32,7 +32,7 @@ class Response implements ResponseInterface, \Serializable
     protected $body;
 
     /**
-     * @param RequestInterface $request
+     * @param Bundle\ServerBundle\RequestInterface $request
      * @param string $httpVersion (optional)
      * @param integer $statusCode (optional)
      * @param string $statusText (optional)

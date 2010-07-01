@@ -24,24 +24,23 @@ use Symfony\Components\DependencyInjection\Loader\LoaderExtension,
 class ServerExtension extends LoaderExtension
 {
     protected $container;
-    protected $resources;
+    protected $resources = array(
+        'server' => 'server.xml'
+    );
 
     /**
      *
-     * @param ContainerInterface $container
+     * @param Symfony\Components\DependencyInjection\ContainerInterface $container
      */
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
-        $this->resources = array(
-            'server' => 'server.xml'
-        );
     }
 
     /**
      * @param array $config
-     * @param BuilderConfiguration $configuration
-     * @return BuilderConfiguration
+     * @param Symfony\Components\DependencyInjection\BuilderConfiguration $configuration
+     * @return Symfony\Components\DependencyInjection\BuilderConfiguration
      *
      * @throws \InvalidArgumentException If Server class does not implement ServerInterface
      */

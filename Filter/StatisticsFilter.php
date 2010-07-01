@@ -21,11 +21,10 @@ use Bundle\ServerBundle\Filter\FilterInterface,
  * @subpackage Filter
  * @author     Pierre Minnieur <pm@pierre-minnieur.de>
  */
-
 class StatisticsFilter implements FilterInterface
 {
     /**
-     * @param EventDispatcher $dispatcher
+     * @param Symfony\Components\EventDispatcher\EventDispatcher $dispatcher
      */
     public function register(EventDispatcher $dispatcher)
     {
@@ -33,11 +32,11 @@ class StatisticsFilter implements FilterInterface
     }
 
     /**
-     * @param Event $event
-     * @param ResponseInterface $response
-     * @return ResponseInterface
+     * @param Symfony\Components\EventDispatcher\Event $event
+     * @param Bundle\ServerBundle\ResponseInterface $response
+     * @return Bundle\ServerBundle\ResponseInterface
      *
-     * @see EventDispatcher::filter()
+     * @see Symfony\Components\EventDispatcher\EventDispatcher::filter()
      */
     public function filter(Event $event, ResponseInterface $response)
     {
